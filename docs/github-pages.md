@@ -50,6 +50,26 @@ local configuration defaults to the repository linked above. Publishing requires
 remote repository and the Pages setting above. Local tests do not prove that a
 remote deployment has completed.
 
+Repository administrators can also enable the Actions publishing source with the
+GitHub CLI, using their existing authenticated account:
+
+```bash
+# One-time setup for a repository without a Pages site.
+gh api --method POST repos/OWNER/REPOSITORY/pages -f build_type=workflow
+
+# Check that the publishing source is GitHub Actions.
+gh api repos/OWNER/REPOSITORY/pages --jq '.build_type'
+```
+
+For an existing Pages site, use `--method PUT` instead of `--method POST` to
+change its publishing source. The expected `build_type` is `workflow`.
+
+The workflow's ordinary `GITHUB_TOKEN` can deploy an enabled site, but cannot
+perform this initial enablement. Adding `enablement: true` to `configure-pages`
+alone does not fix a missing site: that option requires a separate token with
+administrative permissions. Enable Pages once through the settings or API above;
+no additional token or repository secret is needed for routine deployment.
+
 ## Deployment Behavior
 
 Pull requests build and validate the documentation without deployment permissions.
@@ -57,6 +77,11 @@ On matching pushes to `main`, the build uploads `build/site`; the separate deplo
 job requests only Pages and OIDC permissions and publishes the artifact. Manual
 runs deploy only when executed on `main`. Existing deployment jobs are not
 cancelled mid-release.
+
+The documentation workflow uses Node.js 24 actions, including the Pages artifact
+uploader's nested upload action. It runs on GitHub-hosted Ubuntu runners; upgrading
+only checkout or Python setup would leave the older Pages actions' Node.js 20
+deprecation warnings unresolved.
 
 The workflow is filtered to documentation, skill, site-hook, configuration and
 documentation-test changes. A source-only C++ change does not rebuild the site
@@ -83,7 +108,7 @@ if it is absent from the navigation. Review measurement JSON before publication.
 
 | Symptom | Check |
 | --- | --- |
-| Deployment cannot find or configure a Pages site | Select GitHub Actions in Pages settings and check organization policy |
+| `configure-pages` returns `HttpError: Not Found` | Enable Pages once and select GitHub Actions as its source; check administrator access and organization policy |
 | Pages returns 404 | Wait for successful deployment, verify the exact environment URL and include the repository path |
 | Broken navigation after a move | Run `mkdocs build --strict` and update the Markdown link target |
 | An unexpected address appears in canonical links | Check `ANTI_REA_SITE_URL`, especially when publishing a fork |
