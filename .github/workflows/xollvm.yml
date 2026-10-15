@@ -1,0 +1,29 @@
+name: xollvm strength matrix (operator toolchain)
+on:
+  workflow_dispatch:
+    inputs:
+      llvm_bin:
+        description: Installed Linux LLVM 22/23 xollvm directory
+        required: true
+        type: string
+      plugin:
+        description: Plugin path, empty for a static-extension toolchain
+        required: false
+        default: ""
+        type: string
+permissions:
+  contents: read
+jobs:
+  matrix:
+    runs-on: [self-hosted, Linux, X64]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Prepare Python
+        run: |
+          python3 -m venv .venv
+          .venv/bin/python -m pip install -r requirements.txt
+      - name: Run complete matrix
+        env:
+          LLVM_BIN: ${{ inputs.llvm_bin }}
+          XOLLVM_PLUGIN: ${{ inputs.plugin }}
+        run: .venv/bin/python tools/anti_rea.py compare --compiler "$LLVM_BIN/clang++" --opt "$LLVM_BIN/opt" --plugin "$XOLLVM_PLUGIN" --jobs 8

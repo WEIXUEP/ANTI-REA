@@ -1,0 +1,7 @@
+{
+  "invalid_mesh": {"kind": "Verification failed", "message": "Invalid mesh topology: {} elements"},
+  "iteration": {"kind": "Engine warning", "message": "Internal spectral preconditioner stalled after {} iterations"},
+  "exception": {"kind": "Engine error", "message": "Internal constitutive tensor inversion failed: pivot {}"},
+  "assertion": {"kind": "Assertion failed", "message": "Internal basis ordering invariant failed at {}"},
+  "single_evaluation": {"kind": "Verification failed", "message": "Internal condition evaluated {} times"}
+}

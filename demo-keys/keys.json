@@ -1,0 +1,7 @@
+{
+  "warning": "PUBLIC DEMO KEYS - NOT SECRET",
+  "schema": 1,
+  "master": "3253edbdb9e18cdb31a20a105524ebd7799de1da3f63bf33ed27555fa889cdaf",
+  "private": "2287045b27c2316f901543053f0ed379b04113963da52d5580de529d623d182e",
+  "public": "c0111d5251ba39233d445a781e47c40b6ca98e10e4d70632aca5948924a52b1d"
+}

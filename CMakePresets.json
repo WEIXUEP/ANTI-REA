@@ -1,0 +1,25 @@
+{
+  "version": 5,
+  "cmakeMinimumRequired": {"major": 3, "minor": 24, "patch": 0},
+  "configurePresets": [
+    {"name": "common", "hidden": true, "generator": "Ninja", "binaryDir": "${sourceDir}/build/${presetName}", "cacheVariables": {"CMAKE_BUILD_TYPE": "RelWithDebInfo", "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/${presetName}", "ANTI_REA_OBFUSCATION": "NONE"}},
+    {"name": "baseline", "inherits": "common", "cacheVariables": {"ANTI_REA_CODE_PROTECTION": false, "ANTI_REA_STRIP_RELEASE": false}},
+    {"name": "stripped", "inherits": "common", "cacheVariables": {"ANTI_REA_CODE_PROTECTION": false, "ANTI_REA_STRIP_RELEASE": true}},
+    {"name": "protected", "inherits": "common", "cacheVariables": {"ANTI_REA_CODE_PROTECTION": true, "ANTI_REA_STRIP_RELEASE": true}},
+    {"name": "obfuscated-light", "inherits": "protected", "cacheVariables": {"ANTI_REA_OBFUSCATION": "LIGHT"}},
+    {"name": "obfuscated-medium", "inherits": "protected", "cacheVariables": {"ANTI_REA_OBFUSCATION": "MEDIUM"}},
+    {"name": "obfuscated-heavy", "inherits": "protected", "cacheVariables": {"ANTI_REA_OBFUSCATION": "HEAVY"}},
+    {"name": "mixed-vm", "inherits": "protected", "cacheVariables": {"ANTI_REA_OBFUSCATION": "MIXED_VM"}},
+    {"name": "windows-jom", "inherits": "protected", "generator": "NMake Makefiles JOM", "cacheVariables": {"CMAKE_CXX_COMPILER": "clang-cl"}}
+  ],
+  "buildPresets": [
+    {"name": "baseline", "configurePreset": "baseline", "jobs": 8},
+    {"name": "stripped", "configurePreset": "stripped", "jobs": 8},
+    {"name": "protected", "configurePreset": "protected", "jobs": 8},
+    {"name": "obfuscated-light", "configurePreset": "obfuscated-light", "jobs": 8},
+    {"name": "obfuscated-medium", "configurePreset": "obfuscated-medium", "jobs": 8},
+    {"name": "obfuscated-heavy", "configurePreset": "obfuscated-heavy", "jobs": 8},
+    {"name": "mixed-vm", "configurePreset": "mixed-vm", "jobs": 8},
+    {"name": "windows-jom", "configurePreset": "windows-jom", "jobs": 8}
+  ]
+}

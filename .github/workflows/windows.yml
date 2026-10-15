@@ -1,0 +1,41 @@
+name: Windows native acceptance (operator toolchain)
+on:
+  workflow_dispatch:
+    inputs:
+      llvm_bin:
+        description: Installed clang-cl, opt and llvm-undname directory
+        required: true
+        type: string
+      sodium_prefix:
+        description: libsodium prefix containing include, lib and bin
+        required: true
+        type: string
+permissions:
+  contents: read
+jobs:
+  native:
+    runs-on: [self-hosted, Windows, X64]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ilammy/msvc-dev-cmd@v1
+      - name: Prepare Python
+        shell: pwsh
+        run: |
+          python -m venv .venv
+          .venv/Scripts/python -m pip install -r requirements.txt
+      - name: Build and test
+        shell: pwsh
+        env:
+          LLVM_BIN: ${{ inputs.llvm_bin }}
+          SODIUM_PREFIX: ${{ inputs.sodium_prefix }}
+        run: |
+          $env:PATH = "$env:LLVM_BIN;$env:SODIUM_PREFIX/bin;$env:PATH"
+          cmake --preset windows-jom "-DCMAKE_CXX_COMPILER=$env:LLVM_BIN/clang-cl.exe" "-DANTI_REA_OPT=$env:LLVM_BIN/opt.exe" "-DCMAKE_PREFIX_PATH=$env:SODIUM_PREFIX" "-DPython3_EXECUTABLE=$PWD/.venv/Scripts/python.exe"
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          cmake --build --preset windows-jom
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          ctest --test-dir build/windows-jom --output-on-failure
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          cmake --install build/windows-jom
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          .venv/Scripts/python tools/anti_rea.py audit --binary out/windows-jom/bin/anti-rea-demo.exe --binary out/windows-jom/bin/engine.dll --deny "Invalid mesh topology" --deny ResonantKernel --fail-on-deny --out build/windows-audit

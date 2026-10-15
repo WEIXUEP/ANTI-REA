@@ -1,0 +1,535 @@
+{
+  "schema": 1,
+  "platform": "Linux x86_64",
+  "compiler": "clang version 23.1.2 (https://github.com/llvm/llvm-project ba019b7aafce09a013cf7e9139fa0c229f09b188)",
+  "jobs": 8,
+  "samples": 9,
+  "configurations": [
+    {
+      "preset": "baseline",
+      "build_directory": "build/matrix-dc373729643d/baseline",
+      "release_directory": "out/matrix-dc373729643d/baseline",
+      "build_seconds": 1.016338621993782,
+      "startup": {
+        "process_wall_seconds": {
+          "median": 0.0010724949970608577,
+          "minimum": 0.00102647599123884,
+          "maximum": 0.001763060994562693,
+          "stdev": 0.00021965572091778038,
+          "samples": 9
+        },
+        "inner_seconds": {
+          "median": 8e-08,
+          "minimum": 7e-08,
+          "maximum": 1.6e-07,
+          "stdev": 2.710928955629257e-08,
+          "samples": 9
+        },
+        "checksum": 2819930852
+      },
+      "bench": {
+        "process_wall_seconds": {
+          "median": 0.0037331040075514466,
+          "minimum": 0.0036649370013037696,
+          "maximum": 0.003824404993792996,
+          "stdev": 5.230354293343191e-05,
+          "samples": 9
+        },
+        "inner_seconds": {
+          "median": 0.00263322,
+          "minimum": 0.00261031,
+          "maximum": 0.00272497,
+          "stdev": 4.555632240546986e-05,
+          "samples": 9
+        },
+        "checksum": 1885303204
+      },
+      "bytes": 494720,
+      "sha256": {
+        "libengine.so": "2bcfd987281816f6c00c2c7efb2f74e3794fb7b020c677db5ae9dad17d696506",
+        "anti-rea-demo": "21dd0bf1b590cbb6dfe3549327f99ddacf747c5a33c62e781166b8ccce5244c0"
+      },
+      "denied_matches": 71,
+      "categories": {
+        "denied-text": 71,
+        "rtti": 38,
+        "url": 4,
+        "path": 44,
+        "filename": 115,
+        "import-symbol": 102,
+        "export-symbol": 37,
+        "runtime-path": 2,
+        "debug-metadata": 18,
+        "static-symbol": 220
+      },
+      "not_checked": [],
+      "ordinary_string_present": true,
+      "applied_passes": [],
+      "status": "Passed"
+    },
+    {
+      "preset": "stripped",
+      "build_directory": "build/matrix-dc373729643d/stripped",
+      "release_directory": "out/matrix-dc373729643d/stripped",
+      "build_seconds": 0.9662280769989593,
+      "startup": {
+        "process_wall_seconds": {
+          "median": 0.0010692689975257963,
+          "minimum": 0.0010276989924022928,
+          "maximum": 0.0013552870077546686,
+          "stdev": 9.272631014262536e-05,
+          "samples": 9
+        },
+        "inner_seconds": {
+          "median": 8e-08,
+          "minimum": 7e-08,
+          "maximum": 1.1e-07,
+          "stdev": 1.1331154474650634e-08,
+          "samples": 9
+        },
+        "checksum": 2819930852
+      },
+      "bench": {
+        "process_wall_seconds": {
+          "median": 0.003675200990983285,
+          "minimum": 0.003658278990769759,
+          "maximum": 0.004317885992350057,
+          "stdev": 0.00020205542804665279,
+          "samples": 9
+        },
+        "inner_seconds": {
+          "median": 0.00262992,
+          "minimum": 0.00260749,
+          "maximum": 0.00304601,
+          "stdev": 0.00013290590288705096,
+          "samples": 9
+        },
+        "checksum": 1885303204
+      },
+      "bytes": 54288,
+      "sha256": {
+        "libengine.so": "ff5dd2a67d45e6a46e1199ea631fde628e9f63ea743e3cb72bd50a1ef4b176b3",
+        "anti-rea-demo": "06c5af825acd259f172d35ebf3705f384d5f96d84fe5e780c9129babd7c793f6"
+      },
+      "denied_matches": 23,
+      "categories": {
+        "denied-text": 23,
+        "rtti": 18,
+        "url": 2,
+        "import-symbol": 102,
+        "export-symbol": 37,
+        "runtime-path": 2,
+        "path": 3,
+        "filename": 1
+      },
+      "not_checked": [],
+      "ordinary_string_present": true,
+      "applied_passes": [],
+      "status": "Passed"
+    },
+    {
+      "preset": "protected",
+      "build_directory": "build/matrix-dc373729643d/protected",
+      "release_directory": "out/matrix-dc373729643d/protected",
+      "build_seconds": 1.166785882000113,
+      "startup": {
+        "process_wall_seconds": {
+          "median": 0.0011605059989960864,
+          "minimum": 0.001092503996915184,
+          "maximum": 0.0017708269879221916,
+          "stdev": 0.00020653030897891048,
+          "samples": 9
+        },
+        "inner_seconds": {
+          "median": 8e-08,
+          "minimum": 7e-08,
+          "maximum": 1.8e-07,
+          "stdev": 3.590109871423002e-08,
+          "samples": 9
+        },
+        "checksum": 2819930852
+      },
+      "bench": {
+        "process_wall_seconds": {
+          "median": 0.0037535629962803796,
+          "minimum": 0.003711992991156876,
+          "maximum": 0.0040821090078679845,
+          "stdev": 0.00010781148250577191,
+          "samples": 9
+        },
+        "inner_seconds": {
+          "median": 0.00261259,
+          "minimum": 0.00256609,
+          "maximum": 0.00276472,
+          "stdev": 5.203007848030471e-05,
+          "samples": 9
+        },
+        "checksum": 1885303204
+      },
+      "bytes": 62536,
+      "sha256": {
+        "libengine.so": "04552adaa04f5447ab59b0540ccf792f351be5a541495680690acfd20705e1fe",
+        "anti-rea-demo": "4e9d72bab71549d7b12bc6235e79848108d90031a52747f5059551396dd51c8f"
+      },
+      "denied_matches": 0,
+      "categories": {
+        "rtti": 13,
+        "url": 2,
+        "import-symbol": 113,
+        "export-symbol": 5,
+        "runtime-path": 2,
+        "path": 2
+      },
+      "not_checked": [],
+      "ordinary_string_present": true,
+      "applied_passes": [],
+      "status": "Passed"
+    },
+    {
+      "preset": "obfuscated-light",
+      "toolchain": {
+        "compiler": "clang version 23.1.2 (https://github.com/llvm/llvm-project ba019b7aafce09a013cf7e9139fa0c229f09b188)",
+        "opt": "LLVM version 23.1.2",
+        "level": "LIGHT",
+        "xollvm_expected_tag": "v0.11.1",
+        "xollvm_expected_commit": "eb0850bd7cc87f551ad2948826605e518f5b8aa2",
+        "provenance": "User-supplied; pass capability checked, upstream revision must be verified by operator"
+      },
+      "build_directory": "build/matrix-dc373729643d/obfuscated-light",
+      "release_directory": "out/matrix-dc373729643d/obfuscated-light",
+      "build_seconds": 1.2166810390044702,
+      "startup": {
+        "process_wall_seconds": {
+          "median": 0.0011391540028853342,
+          "minimum": 0.0011232789984205738,
+          "maximum": 0.0014459069934673607,
+          "stdev": 9.717419043087308e-05,
+          "samples": 9
+        },
+        "inner_seconds": {
+          "median": 7e-08,
+          "minimum": 6e-08,
+          "maximum": 7e-08,
+          "stdev": 4.969039949999538e-09,
+          "samples": 9
+        },
+        "checksum": 2819930852
+      },
+      "bench": {
+        "process_wall_seconds": {
+          "median": 0.005591690001892857,
+          "minimum": 0.0054875189962331206,
+          "maximum": 0.005767149006715044,
+          "stdev": 8.371260070024394e-05,
+          "samples": 9
+        },
+        "inner_seconds": {
+          "median": 0.00438997,
+          "minimum": 0.0043335,
+          "maximum": 0.00452973,
+          "stdev": 6.213629227177916e-05,
+          "samples": 9
+        },
+        "checksum": 1885303204
+      },
+      "bytes": 66672,
+      "sha256": {
+        "libengine.so": "04552adaa04f5447ab59b0540ccf792f351be5a541495680690acfd20705e1fe",
+        "anti-rea-demo": "f779c8c566ac3babf89ef38efa6b7e998e85444f3d6c93a283ee7539a4afa338"
+      },
+      "denied_matches": 0,
+      "categories": {
+        "rtti": 13,
+        "url": 2,
+        "import-symbol": 113,
+        "export-symbol": 5,
+        "runtime-path": 2,
+        "path": 2
+      },
+      "not_checked": [],
+      "ordinary_string_present": false,
+      "applied_passes": [
+        {
+          "source": "policy.cpp",
+          "verified": [
+            {
+              "changed": [
+                "mba",
+                "substitution",
+                "split"
+              ],
+              "function": "policy_dispatch"
+            },
+            {
+              "changed": [
+                "substitution"
+              ],
+              "function": "policy_token"
+            }
+          ]
+        }
+      ],
+      "status": "Passed"
+    },
+    {
+      "preset": "obfuscated-medium",
+      "toolchain": {
+        "compiler": "clang version 23.1.2 (https://github.com/llvm/llvm-project ba019b7aafce09a013cf7e9139fa0c229f09b188)",
+        "opt": "LLVM version 23.1.2",
+        "level": "MEDIUM",
+        "xollvm_expected_tag": "v0.11.1",
+        "xollvm_expected_commit": "eb0850bd7cc87f551ad2948826605e518f5b8aa2",
+        "provenance": "User-supplied; pass capability checked, upstream revision must be verified by operator"
+      },
+      "build_directory": "build/matrix-dc373729643d/obfuscated-medium",
+      "release_directory": "out/matrix-dc373729643d/obfuscated-medium",
+      "build_seconds": 1.2670675319968723,
+      "startup": {
+        "process_wall_seconds": {
+          "median": 0.0011717579909600317,
+          "minimum": 0.0011134439992019907,
+          "maximum": 0.0014126689929980785,
+          "stdev": 9.927658400161508e-05,
+          "samples": 9
+        },
+        "inner_seconds": {
+          "median": 9e-08,
+          "minimum": 9e-08,
+          "maximum": 1.2e-07,
+          "stdev": 1.0657403385139375e-08,
+          "samples": 9
+        },
+        "checksum": 2819930852
+      },
+      "bench": {
+        "process_wall_seconds": {
+          "median": 0.006297625994193368,
+          "minimum": 0.006203023003763519,
+          "maximum": 0.006410185000277124,
+          "stdev": 6.277283535272134e-05,
+          "samples": 9
+        },
+        "inner_seconds": {
+          "median": 0.00510733,
+          "minimum": 0.00508824,
+          "maximum": 0.00522066,
+          "stdev": 4.3062462413752026e-05,
+          "samples": 9
+        },
+        "checksum": 1885303204
+      },
+      "bytes": 66672,
+      "sha256": {
+        "libengine.so": "04552adaa04f5447ab59b0540ccf792f351be5a541495680690acfd20705e1fe",
+        "anti-rea-demo": "973e743ddd1d9ffeb37947882fde42fcb842fd030da88cf2c7c05a98c4e357e6"
+      },
+      "denied_matches": 0,
+      "categories": {
+        "rtti": 13,
+        "url": 2,
+        "import-symbol": 113,
+        "export-symbol": 5,
+        "runtime-path": 2,
+        "path": 2
+      },
+      "not_checked": [],
+      "ordinary_string_present": false,
+      "applied_passes": [
+        {
+          "source": "policy.cpp",
+          "verified": [
+            {
+              "changed": [
+                "mba",
+                "substitution",
+                "split",
+                "bcf"
+              ],
+              "function": "policy_dispatch"
+            },
+            {
+              "changed": [
+                "substitution"
+              ],
+              "function": "policy_token"
+            }
+          ]
+        }
+      ],
+      "status": "Passed"
+    },
+    {
+      "preset": "obfuscated-heavy",
+      "toolchain": {
+        "compiler": "clang version 23.1.2 (https://github.com/llvm/llvm-project ba019b7aafce09a013cf7e9139fa0c229f09b188)",
+        "opt": "LLVM version 23.1.2",
+        "level": "HEAVY",
+        "xollvm_expected_tag": "v0.11.1",
+        "xollvm_expected_commit": "eb0850bd7cc87f551ad2948826605e518f5b8aa2",
+        "provenance": "User-supplied; pass capability checked, upstream revision must be verified by operator"
+      },
+      "build_directory": "build/matrix-dc373729643d/obfuscated-heavy",
+      "release_directory": "out/matrix-dc373729643d/obfuscated-heavy",
+      "build_seconds": 1.2167676480021328,
+      "startup": {
+        "process_wall_seconds": {
+          "median": 0.0011450389865785837,
+          "minimum": 0.0010852120030904189,
+          "maximum": 0.0014315740118036047,
+          "stdev": 9.877317804996657e-05,
+          "samples": 9
+        },
+        "inner_seconds": {
+          "median": 4.61e-07,
+          "minimum": 4.51e-07,
+          "maximum": 5.01e-07,
+          "stdev": 1.3392461487395003e-08,
+          "samples": 9
+        },
+        "checksum": 2819930852
+      },
+      "bench": {
+        "process_wall_seconds": {
+          "median": 0.04599137899640482,
+          "minimum": 0.04538010399846826,
+          "maximum": 0.05064584799401928,
+          "stdev": 0.0017217406985453724,
+          "samples": 9
+        },
+        "inner_seconds": {
+          "median": 0.0443388,
+          "minimum": 0.0439267,
+          "maximum": 0.0490331,
+          "stdev": 0.001686994057012373,
+          "samples": 9
+        },
+        "checksum": 1885303204
+      },
+      "bytes": 70768,
+      "sha256": {
+        "libengine.so": "04552adaa04f5447ab59b0540ccf792f351be5a541495680690acfd20705e1fe",
+        "anti-rea-demo": "32cf8e5c891ead433430bec0b122f547a74c0f65a5a6d367372eccd8f574d32e"
+      },
+      "denied_matches": 0,
+      "categories": {
+        "rtti": 13,
+        "url": 2,
+        "import-symbol": 113,
+        "export-symbol": 5,
+        "runtime-path": 2,
+        "path": 2
+      },
+      "not_checked": [],
+      "ordinary_string_present": false,
+      "applied_passes": [
+        {
+          "source": "policy.cpp",
+          "verified": [
+            {
+              "changed": [
+                "mba",
+                "split",
+                "bcf",
+                "flattening"
+              ],
+              "function": "policy_dispatch"
+            },
+            {
+              "changed": [
+                "mba"
+              ],
+              "function": "policy_token"
+            }
+          ]
+        }
+      ],
+      "status": "Passed"
+    },
+    {
+      "preset": "mixed-vm",
+      "toolchain": {
+        "compiler": "clang version 23.1.2 (https://github.com/llvm/llvm-project ba019b7aafce09a013cf7e9139fa0c229f09b188)",
+        "opt": "LLVM version 23.1.2",
+        "level": "MIXED_VM",
+        "xollvm_expected_tag": "v0.11.1",
+        "xollvm_expected_commit": "eb0850bd7cc87f551ad2948826605e518f5b8aa2",
+        "provenance": "User-supplied; pass capability checked, upstream revision must be verified by operator"
+      },
+      "build_directory": "build/matrix-dc373729643d/mixed-vm",
+      "release_directory": "out/matrix-dc373729643d/mixed-vm",
+      "build_seconds": 2.620339895001962,
+      "startup": {
+        "process_wall_seconds": {
+          "median": 0.001160698986495845,
+          "minimum": 0.0011135480017401278,
+          "maximum": 0.0016748960042605177,
+          "stdev": 0.00018161367375574907,
+          "samples": 9
+        },
+        "inner_seconds": {
+          "median": 7.274e-06,
+          "minimum": 6.553e-06,
+          "maximum": 8.797e-06,
+          "stdev": 5.988444427951777e-07,
+          "samples": 9
+        },
+        "checksum": 2819930852
+      },
+      "bench": {
+        "process_wall_seconds": {
+          "median": 0.07989328099938575,
+          "minimum": 0.07952734199352562,
+          "maximum": 0.08166688299388625,
+          "stdev": 0.0006756949097479443,
+          "samples": 9
+        },
+        "inner_seconds": {
+          "median": 0.0783437,
+          "minimum": 0.0776806,
+          "maximum": 0.0799569,
+          "stdev": 0.0006904009046458449,
+          "samples": 9
+        },
+        "checksum": 1885303204
+      },
+      "bytes": 300152,
+      "sha256": {
+        "libengine.so": "04552adaa04f5447ab59b0540ccf792f351be5a541495680690acfd20705e1fe",
+        "anti-rea-demo": "cc1d82d003b0c3380e845bd9e341632feec5b5100cf5c59fb9769d56a57fb729"
+      },
+      "denied_matches": 0,
+      "categories": {
+        "rtti": 13,
+        "url": 2,
+        "import-symbol": 114,
+        "export-symbol": 5,
+        "runtime-path": 2,
+        "path": 2
+      },
+      "not_checked": [],
+      "ordinary_string_present": false,
+      "applied_passes": [
+        {
+          "source": "policy.cpp",
+          "verified": [
+            {
+              "changed": [
+                "mba",
+                "split",
+                "flattening"
+              ],
+              "function": "policy_dispatch"
+            },
+            {
+              "changed": [
+                "vm"
+              ],
+              "function": "policy_token"
+            }
+          ]
+        }
+      ],
+      "status": "Passed"
+    }
+  ]
+}

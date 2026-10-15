@@ -1,0 +1,7 @@
+/build/
+/.private/
+/out/
+__pycache__/
+*.pyc
+.venv/
+CMakeUserPresets.json
