@@ -7,6 +7,24 @@ reveals, apply narrowly scoped protections, and measure what actually changes.
 This project distinguishes four different tools: diagnostic confidentiality,
 opaque RTTI names, release-symbol hygiene, and code obfuscation.
 
+## Documentation Website
+
+The project includes a searchable MkDocs Material site with grouped technical
+guides, measured results and a downloadable audit skill. See the
+[documentation home](docs/index.md) or [GitHub Pages setup](docs/github-pages.md).
+
+**Online documentation:** <https://weixuep.github.io/ANTI-REA/>
+
+```bash
+python -m pip install -r requirements-docs.txt
+python -m mkdocs serve
+```
+
+On GitHub, select **Settings > Pages > Source: GitHub Actions** after pushing the
+repository. The **Documentation** workflow validates pull requests and deploys
+documentation updates from `main`. The workflow derives the public base URL from
+GitHub metadata; forks can override it with `ANTI_REA_SITE_URL`.
+
 ## What You Can Reproduce
 
 - Plaintext diagnostics versus public-key-encrypted warnings and offline recovery.
@@ -144,6 +162,8 @@ its comparison profiles do not prescribe a production protection policy.
 
 | Document | Purpose |
 | --- | --- |
+| [Documentation home](docs/index.md) | Website navigation and reading paths |
+| [Quickstart](docs/quickstart.md) | Build, run and compare the example |
 | [Threat model](docs/threat-model.md) | What the protections do and do not protect |
 | [Scenario catalog](docs/scenarios.md) | Reproduce each leak and understand its mitigation |
 | [Diagnostics](docs/diagnostics.md) | Encryption, keys, maps and recovery |
@@ -153,6 +173,8 @@ its comparison profiles do not prescribe a production protection policy.
 | [Measurements](docs/measurement.md) | Comparison methodology and interpretation |
 | [Results](docs/comparison.md) | Sanitized measured results |
 | [Remaining exposure](docs/remaining-exposure.md) | What an analyst can still identify and why |
+| [Audit skill](docs/audit-skill.md) | Use and download the audit-and-repair skill |
+| [GitHub Pages](docs/github-pages.md) | Preview and deploy the documentation website |
 
 ## Layout and License
 

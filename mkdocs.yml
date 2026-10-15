@@ -1,0 +1,88 @@
+site_name: ANTI-REA
+site_description: Practical C++ information protection, auditing and reproducible measurements.
+site_url: !ENV [ANTI_REA_SITE_URL, 'https://weixuep.github.io/ANTI-REA/']
+repo_url: https://github.com/WEIXUEP/ANTI-REA
+repo_name: WEIXUEP/ANTI-REA
+edit_uri: ''
+docs_dir: docs
+site_dir: build/site
+strict: true
+
+theme:
+  name: material
+  language: en
+  palette:
+    - scheme: default
+      primary: teal
+      accent: indigo
+      toggle:
+        icon: material/weather-night
+        name: Switch to dark mode
+    - scheme: slate
+      primary: teal
+      accent: indigo
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.footer
+    - navigation.top
+    - search.highlight
+    - search.suggest
+    - content.code.copy
+    - toc.follow
+
+plugins:
+  - search
+
+hooks:
+  - src/anti_rea/site_hook.py
+
+watch:
+  - skills/cpp-leakage-audit
+  - LICENSE
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.details
+  - pymdownx.highlight
+  - pymdownx.inlinehilite
+  - pymdownx.superfences
+
+validation:
+  nav:
+    omitted_files: warn
+    not_found: warn
+  links:
+    not_found: warn
+    anchors: warn
+    unrecognized_links: warn
+
+nav:
+  - Home: index.md
+  - Getting Started:
+      - Quickstart: quickstart.md
+      - Threat Model: threat-model.md
+      - Leakage Scenarios: scenarios.md
+  - Protection:
+      - Diagnostics and Recovery: diagnostics.md
+      - Build and Integration: integration.md
+      - xollvm and Function Selection: xollvm.md
+      - Windows: windows.md
+  - Audit Skill:
+      - Using the Skill: audit-skill.md
+      - Skill Instructions: skill/index.md
+      - Remediation Policy: skill/references/remediation.md
+      - Validation Guide: skill/references/validation.md
+  - Evidence:
+      - Measurement Tools: measurement.md
+      - Measured Results: comparison.md
+      - Remaining Exposure: remaining-exposure.md
+  - Publishing:
+      - GitHub Pages: github-pages.md
