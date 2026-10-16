@@ -150,6 +150,13 @@ for an evidence-based audit and authorized repairs. Copy its directory into your
 agent's skill directory; it has no dependency on this repository's Python package.
 The project does not install the skill globally by itself.
 
+The downloaded skill includes independent Python tools for environment checks,
+source/binary/package audits, key generation, offline diagnostic/RTTI recovery
+and arbitrary workload measurements. Read its
+[operations guide](skills/cpp-leakage-audit/references/operations.md) for commands,
+optional dependencies and supported formats. C++ protection changes and optional
+GUI work remain agent-guided rather than a universal automatic rewrite.
+
 For authorized protection work, the skill defaults to a **stripped and
 information-protected release**, not maximum obfuscation. It adapts diagnostic,
 path and RTTI protections to the target, then selects function-level obfuscation or VM by implementation value,
@@ -179,7 +186,8 @@ its comparison profiles do not prescribe a production protection policy.
 ## Layout and License
 
 `examples/` contains C++, `tools/` contains the Python entry point, `src/anti_rea/`
-contains implementation, and `skills/` contains the standalone auditor. Generated
+contains implementation, and `skills/` contains the independent audit/recovery
+toolkit and integration guidance. Generated
 headers, private LLVM IR, maps and measurements stay in ignored build directories.
 
 Original example code is MIT licensed. xollvm is an external project under

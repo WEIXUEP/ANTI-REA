@@ -11,15 +11,94 @@ tool; remediation still requires project-specific decisions and validation.
 copy `skills/cpp-leakage-audit` from a repository checkout. The project does not
 install it globally or change an agent's settings automatically.
 
-The archive contains only the canonical instructions, remediation and validation
-references, standalone scanner and agent metadata. It contains no cryptographic
-keys, native binaries, private mappings or LLVM toolchain.
+The archive contains canonical instructions and references, standalone Python
+tools, optional dependency requirements and agent metadata. It contains no
+cryptographic keys, native binaries, private mappings or LLVM toolchain.
 The project license is included with the downloadable source.
 
 Read the published [skill instructions](skill/index.md),
 [remediation policy](skill/references/remediation.md) and
 [validation guide](skill/references/validation.md). These pages are generated
 from the same files packaged in the archive, not separately maintained copies.
+
+## Independent Capabilities
+
+The extracted directory works without an example-project checkout. See
+[Independent Operations](skill/references/operations.md) for complete commands,
+formats and exit statuses, and
+[Protection Integration](skill/references/integration.md) for target-specific repairs.
+
+| Capability | Implementation |
+| --- | --- |
+| Source/binary audit, exact corpus, global strings, package checks | Standalone `scripts/audit.py` |
+| Key generation with overwrite protection | Standalone `scripts/generate_keys.py` |
+| Sealed diagnostic, location and RTTI recovery | Standalone `scripts/decode.py`, supported version-1 maps only |
+| Dependency and LLVM/xollvm capability inventory | Standalone `scripts/doctor.py` |
+| Arbitrary workload timing and artifact comparison | Standalone `scripts/measure.py`, trusted command manifest |
+| C++ diagnostics, RTTI, build and selective obfuscation repairs | Agent-guided integration, not a universal automatic transformer |
+| Optional recovery GUI | Design and acceptance guidance, not a bundled application |
+
+Use Python 3.10+. Scanning and measurement use the standard library; install
+`scripts/requirements.txt` in a selected environment for crypto and structured
+ELF/PE inspection. Missing dependencies remain explicit unmet checks.
+
+```bash
+python <skill-directory>/scripts/doctor.py
+```
+
+The standalone scripts are tested after extraction from the published archive,
+with a separate working directory and without importing the example application.
+This validates portable tool packaging, not universal compatibility with every
+diagnostic schema, compiler invocation or ABI layout.
+
+## Generate and Manage Keys
+
+The skill includes a standalone Python key generator and
+[key lifecycle rules](skill/references/key-management.md). With PyNaCl installed
+in the selected environment, run:
+
+```bash
+python <skill-directory>/scripts/generate_keys.py --out /private/releases/r17/keys.json
+```
+
+The output uses the example project's key schema, so the existing build and
+decoder can consume it. It requires an explicit destination and refuses to
+overwrite an existing file. Only a public fingerprint and the destination are
+printed. Adapt the format explicitly before using it with another integration.
+
+The rules distinguish public sealing material, private recovery keys and secret
+naming material, and cover stable IDs, rotation, backups, production/demo
+separation and release-package isolation. Generating keys is authorized setup,
+not an automatic side effect of auditing or opening the decoder.
+
+## Design a Recovery CLI or GUI
+
+The skill also includes an [offline recovery tool design guide](skill/references/recovery-tools.md).
+It covers a shared Python backend, optional GUI, automatic developer-key loading,
+build-root map discovery, visible loading state, batch decoding and failure tests.
+For example:
+
+```text
+Use cpp-leakage-audit to improve this project's offline diagnostic decoder.
+Preserve its existing formats and CLI. Discover maps from a selected build root,
+show which keys and maps are actually loaded, and keep headless operation free
+of GUI dependencies. Add an optional GUI only within the requested scope.
+Do not copy production keys or upload reports. Test recovery and error cases.
+```
+
+These are implementation guidelines for an agent, not a bundled universal GUI.
+The example project's existing recovery commands are documented in
+[Diagnostics and Recovery](diagnostics.md).
+
+For supported maps, the independent headless implementation is already usable:
+
+```bash
+python <skill-directory>/scripts/decode.py --build /private/releases/r17/build \
+  --keys /private/releases/r17/keys.json --report protected.log
+```
+
+It supports explicit map inventory, mixed logs, partial-failure status and
+RTTI-only lookup without loading a GUI. It does not guess production keys.
 
 ## Audit Without Changing Code
 

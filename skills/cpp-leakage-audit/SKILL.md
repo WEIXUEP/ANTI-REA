@@ -1,9 +1,37 @@
 ---
 name: cpp-leakage-audit
-description: Audit C++ source and native ELF/PE artifacts for exposed diagnostics, source paths, symbols and RTTI names, and implement scoped mitigations when requested. Use for reverse-engineering information-leakage reviews, not general vulnerability scanning or arbitrary binary rewriting.
+description: Audit C++ source and native ELF/PE releases for exposed diagnostics, paths, symbols and RTTI names; implement scoped protection, manage recovery keys, decode offline reports, compare release workloads and design recovery tools when requested. Use for reverse-engineering information protection, not general vulnerability scanning or arbitrary binary rewriting.
 ---
 
 # C++ Leakage Audit
+
+## Independent Operation
+
+This directory is a self-contained agent skill, not a universal source rewriter.
+Python 3.10+ runs the scanner, environment inventory and workload measurement.
+Install the optional libraries in `scripts/requirements.txt` into a selected
+environment for sealed recovery and structured ELF/PE inspection. No checkout of
+the example application, global agent configuration or network service is needed.
+Do not install packages/toolchains or execute workload commands outside the
+user's authorized scope.
+
+Start with `python <skill-directory>/scripts/doctor.py`. For exact commands,
+supported formats, exit codes and end-to-end operation, read
+[operations.md](references/operations.md). Choose only the relevant mode:
+
+| Requested task | Bundled capability | Additional guidance |
+| --- | --- | --- |
+| Audit source, artifacts or a staged release | `scripts/audit.py` | Evidence collection below; remediation and validation references |
+| Generate private keys | `scripts/generate_keys.py` | Key lifecycle reference; no automatic rotation |
+| Decode diagnostics, source locations or RTTI | `scripts/decode.py` with explicit recovery material | Recovery tool reference; versioned format limits |
+| Check LLVM/xollvm readiness | `scripts/doctor.py` with explicit compiler/opt | Integration reference |
+| Measure arbitrary release workloads | `scripts/measure.py` with a trusted command manifest | Operations and validation references |
+| Implement protection or selective obfuscation | Agent-guided changes to the target, not an automatic script | `references/integration.md` and remediation policy |
+| Design a developer GUI | Agent-guided optional frontend; no bundled GUI | Recovery tool reference |
+
+Read [integration.md](references/integration.md) before adding diagnostic, RTTI,
+build/release or xollvm protection to a new target. It covers first-party scope,
+CPU/ABI limits, CMake integration, MPI/CUDA boundaries and platform differences.
 
 ## Establish the Target
 
@@ -27,6 +55,14 @@ python <skill-directory>/scripts/audit.py --source <source-root> \
   --binary <installed-executable> --binary <installed-library> --out <report-prefix>
 ```
 
+Use `--package <staging-root>` for native artifact discovery and private-file
+inventory, `--deny-file <corpus.json>` for repeatable exact checks and
+`--all-strings` for a confidential global readable-string inventory. Source,
+binary and package scans are distinct: package discovery does not inspect every
+asset's contents or follow symlinks. Pass selected assets explicitly and review
+symlink destinations. `--require-metadata` makes unchecked structured inspection
+fail the gate; `--fail-on-private` gates unaccepted private-file candidates.
+
 Paths are always scanned. Add `--function`, `--variable` or `--deny` only for
 requested names or an evidence-backed sensitive corpus. Preserve a confirmed
 byte match separately from a candidate source/path match and an unperformed
@@ -41,6 +77,24 @@ Check stdout/stderr from authorized normal and intentional-failure scenarios whe
 safe. Do not trigger fatal tests against production services. Compare build and
 installed copies: debug separation, export policy and release stripping can differ.
 Inspect package contents for PDBs, private maps, raw IR and keys.
+
+## Design Offline Recovery Tools When Requested
+
+For key generation, provisioning or rotation, first read
+[key-management.md](references/key-management.md). Use the project's existing
+generator when compatible; the bundled `scripts/generate_keys.py` provides a
+standalone example-compatible alternative. Generate keys only within authorized
+setup work, never during an audit or as a silent response to a missing key.
+
+Read [recovery-tools.md](references/recovery-tools.md) when designing or improving
+a diagnostic decoder, key/map loading workflow, GUI or headless recovery script.
+Use a shared Python backend with optional frontends, release-aware map discovery
+and inspectable loading status. A GUI is optional, not a dependency of CLI use.
+Match the target's actual formats and recovery material; opaque ID lookup is not
+cryptographic decryption. Preserve existing entrypoints when practical.
+Do not create a new GUI for an audit-only request, upload recovery material or
+copy production secrets into examples. Distinguish implemented decoder features
+from design recommendations and acceptance checks.
 
 ## Propose or Implement Scoped Fixes
 
@@ -89,6 +143,13 @@ For a new integration or trial, read
 [validation.md](references/validation.md) for coverage and negative controls.
 Verify target selection against expected names; an empty map is not evidence of
 successful protection. Test fresh staged artifacts rather than an old install.
+
+Use `scripts/measure.py` for a target-independent workload comparison rather than
+copying the example application's benchmark. It executes a trusted manifest's
+argument arrays without a shell and records medians, dispersion, output hashes,
+artifact size and artifact hashes. A valid run is not automatically a correctness
+pass. Confirm output invariants with independent tests and compare the requested
+performance budget. Never infer successful xollvm application from timing alone.
 
 Conclude with findings resolved, intentional exposures, checks not performed and
 remaining limitations. Never equate zero string matches with inability to reverse

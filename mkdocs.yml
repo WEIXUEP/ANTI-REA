@@ -78,8 +78,12 @@ nav:
   - Audit Skill:
       - Using the Skill: audit-skill.md
       - Skill Instructions: skill/index.md
+      - Independent Operations: skill/references/operations.md
+      - Protection Integration: skill/references/integration.md
       - Remediation Policy: skill/references/remediation.md
       - Validation Guide: skill/references/validation.md
+      - Recovery Tool Design: skill/references/recovery-tools.md
+      - Key Generation and Lifecycle: skill/references/key-management.md
   - Evidence:
       - Measurement Tools: measurement.md
       - Measured Results: comparison.md

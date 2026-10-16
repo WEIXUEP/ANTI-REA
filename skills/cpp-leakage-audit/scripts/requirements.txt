@@ -1,0 +1,4 @@
+# Optional extras: the scanner and measurement tools run with the standard library.
+PyNaCl>=1.5,<2
+pyelftools>=0.31,<1
+pefile>=2024.8.26

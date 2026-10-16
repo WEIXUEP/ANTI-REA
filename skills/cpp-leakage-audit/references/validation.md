@@ -4,6 +4,14 @@ Read this when testing the skill on a new project or validating a new protection
 integration. Keep temporary fixtures outside the target repository when requested.
 Do not replace production workloads with the fixture's performance assumptions.
 
+For a downloaded-skill test, extract the allowlisted ZIP to a temporary directory
+and run its scripts from a different working directory without the example's
+`src` or `tools` on `PYTHONPATH`. Exercise audit, key generation, map inventory,
+decoding, environment checks and a trusted workload manifest. This tests actual
+packaging independence rather than only file presence. Test standard-library-only
+commands with optional dependencies unavailable; do not equate a dependency-free
+string scan with a completed structured ELF/PE audit.
+
 ## Establish Evidence Before Repairs
 
 - Keep a baseline and a stripped-only release using the same compiler, optimization
