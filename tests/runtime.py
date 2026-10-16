@@ -36,6 +36,9 @@ def main():
         return subprocess.run([str(exe), mode], capture_output=True, text=True, timeout=15)
 
     result = run("selftest")
+    rtti = run("rtti-test")
+    check(rtti.returncode == 0 and "\tFAIL\t" not in rtti.stdout and "RESULT\t39\t0" in rtti.stdout,
+          "Extended RTTI and exception boundary suite")
     reference = 123
     for _ in range(4096):
         reference = (reference * 1664525 + 1013904223) & 0xffffffff

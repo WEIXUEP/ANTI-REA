@@ -1,6 +1,7 @@
 """Portable tools and ABI fixture tests; no compiler required."""
 import importlib.util
 import json
+import os
 from pathlib import Path
 import sys
 import tempfile
@@ -10,7 +11,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 from anti_rea.crypto import generate_keys, load_keys, opaque, seal, open_sealed, decode
 from anti_rea.generate import generate
-from anti_rea.ir import transform
+from anti_rea.ir import transform, decode_type, SCOPE
 from anti_rea.launcher import split_compile, windows_words, expand_response, validate_obfuscation
 
 spec = importlib.util.spec_from_file_location("audit", ROOT / "skills/cpp-leakage-audit/scripts/audit.py")
@@ -110,6 +111,15 @@ class LauncherTests(unittest.TestCase):
 
 
 class RttiTests(unittest.TestCase):
+    @unittest.skipUnless(os.name == "nt", "Windows DbgHelp API")
+    def test_windows_system_demangler_and_local_scope(self):
+        symbol = "??_R0?AV<lambda_0>@?0??print_rtti@@YAXXZ@@8"
+        decoded = decode_type(symbol, ".?AV<lambda_0>@?0??print_rtti@@YAXXZ@", None, True)
+        self.assertIn("print_rtti(void)", decoded)
+        self.assertTrue(SCOPE.search(decoded))
+        foreign = decode_type("??_R0?AUIndependent@third_party@@@8", ".?AUIndependent@third_party@@", None, True)
+        self.assertFalse(SCOPE.search(foreign))
+
     def test_itanium_fixture(self):
         raw = "N5aegis8internal1XE"
         ir = '@_ZTS' + raw + ' = linkonce_odr constant [' + str(len(raw) + 1) + ' x i8] c"' + raw + '\\00", align 1\n'

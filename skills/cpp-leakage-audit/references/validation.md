@@ -6,6 +6,10 @@ Do not replace production workloads with the fixture's performance assumptions.
 
 ## Establish Evidence Before Repairs
 
+- Run the skill's scanner against the original program first. Preserve the JSON
+  and Markdown reports privately, with a SHA-256 inventory and confirmed positive
+  controls. Baseline capture is an observation, not a `--fail-on-deny` clean gate.
+  Missing originals leave the improvement claim unverified.
 - Keep a baseline and a stripped-only release using the same compiler, optimization
   and inputs. Preserve private debug builds. Record which actual installed files
   were scanned and measured.
@@ -47,6 +51,9 @@ required public exports functional. Report unsupported layouts explicitly.
   prevent their core dumps from leaving sensitive test data unintentionally.
 - For RTTI, check cross-library downcasts, sibling casts when applicable, type
   equality, inheritance and exceptions, not only printed `typeid().name()`.
+  On Windows use the [native acceptance contract](windows.md): independent
+  EXE/DLL descriptors, hashes, ordering, failure casts, rethrows, exception_ptr
+  and pointer exception conversions under both Debug and Release CRT settings.
 - For sealed diagnostics, recover both template and dynamic fields, resolve the
   matching source map, and reject wrong keys, damaged payloads and mismatched
   release maps. Repeated logical sites need unambiguous location handling.
@@ -60,6 +67,11 @@ Use a clean or unique staging directory, and copy the release produced by this
 run for relocation tests. Do not validate an old successful release while scanning
 new build outputs. Keep artifact paths or hashes in the evidence. Repeat the same
 corpus and public-name checks after repairs.
+Use `--baseline` with the original report to compare findings independently of
+byte offsets. Keep artifact roles and corpus unchanged. A renamed resource or
+new package file requires an explicit inventory review, rather than quietly
+dropping it from the post-repair scan. Scan full packages separately to catch
+private PDBs, IR, maps and keys; scanning EXE/DLL alone is insufficient.
 
 Review candidate paths in context. Sealed payloads can contain slash-separated
 Base64 substrings; compiler URLs, loader paths and relative runtime paths may also

@@ -7,6 +7,7 @@ SKILL_FILES = (
     "SKILL.md",
     "references/remediation.md",
     "references/validation.md",
+    "references/windows.md",
     "scripts/audit.py",
     "agents/openai.yaml",
 )
@@ -47,6 +48,7 @@ def on_files(files, config):
         ("SKILL.md", "skill/index.md"),
         ("references/remediation.md", "skill/references/remediation.md"),
         ("references/validation.md", "skill/references/validation.md"),
+        ("references/windows.md", "skill/references/windows.md"),
     ):
         files.append(File.generated(config, destination, content=contents[source].decode("utf-8")))
     files.append(File.generated(config, "downloads/cpp-leakage-audit.zip", content=skill_archive(contents)))

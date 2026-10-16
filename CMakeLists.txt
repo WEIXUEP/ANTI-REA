@@ -36,7 +36,7 @@ execute_process(COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/too
 
 add_library(engine SHARED examples/engine.cpp examples/diagnostics.cpp)
 target_compile_definitions(engine PRIVATE AR_BUILD_LIBRARY)
-add_executable(anti-rea-demo examples/main.cpp examples/policy.cpp examples/diagnostics.cpp)
+add_executable(anti-rea-demo examples/main.cpp examples/policy.cpp examples/diagnostics.cpp examples/rtti.cpp)
 target_link_libraries(anti-rea-demo PRIVATE engine)
 foreach(target IN ITEMS engine anti-rea-demo)
     target_include_directories(${target} PRIVATE examples "${generated}")
@@ -45,7 +45,7 @@ foreach(target IN ITEMS engine anti-rea-demo)
     if(MSVC)
         target_compile_options(${target} PRIVATE /W4 /EHsc)
         # Keep PDBs private and remove the developer path from CodeView.
-        target_link_options(${target} PRIVATE "/PDBALTPATH:%_PDB%")
+        target_link_options(${target} PRIVATE "/PDBALTPATH:$<TARGET_PDB_FILE_NAME:${target}>")
     else()
         target_compile_options(${target} PRIVATE -Wall -Wextra -Wpedantic)
     endif()

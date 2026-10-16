@@ -186,14 +186,15 @@ def launch(argv):
         demangler = compiler.parent / ("llvm-undname.exe" if msvc else "llvm-cxxfilt")
         if not demangler.exists():
             alternate = shutil.which("llvm-undname" if msvc else "c++filt")
-            if not alternate:
+            if not alternate and not (msvc and os.name == "nt"):
                 raise ValueError("Install llvm-undname (Windows) or c++filt (Linux) for RTTI selection")
-            demangler = Path(alternate)
+            demangler = Path(alternate) if alternate else None
         ir, rows = transform(ir, keys["master"], demangler, msvc)
     transformed.write_text(ir, encoding="utf-8")
     run([args.opt, "-passes=verify", "-disable-output", transformed])
     current = transformed
-    report = dict(schema=1, source=Path(source).name, abi="msvc" if msvc else "itanium",
+    report = dict(schema=1, source=Path(source).name, object=str(Path(output).resolve().relative_to(build.resolve())),
+                  abi="msvc" if msvc else "itanium",
                   level=args.level, rtti=rows, xollvm="Not run")
     if args.level != "NONE":
         command = [args.opt]

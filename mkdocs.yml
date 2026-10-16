@@ -80,7 +80,9 @@ nav:
       - Skill Instructions: skill/index.md
       - Remediation Policy: skill/references/remediation.md
       - Validation Guide: skill/references/validation.md
+      - Windows Validation: skill/references/windows.md
   - Evidence:
+      - Windows Native Results: windows-validation.md
       - Measurement Tools: measurement.md
       - Measured Results: comparison.md
       - Remaining Exposure: remaining-exposure.md
