@@ -18,7 +18,8 @@ The project license is included with the downloadable source.
 
 Read the published [skill instructions](skill/index.md),
 [remediation policy](skill/references/remediation.md) and
-[validation guide](skill/references/validation.md). These pages are generated
+[validation guide](skill/references/validation.md) and
+[Windows acceptance](skill/references/windows.md). These pages are generated
 from the same files packaged in the archive, not separately maintained copies.
 
 ## Independent Capabilities
@@ -125,6 +126,26 @@ default; add `--function`, `--variable` or `--deny` for an evidence-backed corpu
 Use `--fail-on-deny` when a confirmed sensitive match must fail an automation job.
 Install `pyelftools` for ELF inspection or `pefile` for PE inspection; missing
 parsers are reported as unperformed checks, not a clean result.
+
+The skill starts by scanning the original program before repairs. Preserve that
+report as the baseline; confirm it detects the known leaks. Every binary report
+records artifact roles, sizes and SHA-256 fingerprints. After rebuilding, pass
+`--baseline build/baseline-audit.json` and a different `--out`, with the same
+binary ordering, filenames, corpus and allow rules. The JSON and Markdown reports
+distinguish resolved, persistent and introduced findings independently of offsets.
+The scanner rejects changed scope or inventories instead of claiming improvement
+from a smaller scan. Missing original artifacts leave the comparison unverified.
+Reports also fingerprint the scanner; comparisons require the same scanner
+version. Outputs cannot overwrite input artifacts or be written into the scanned
+release directory.
+
+Use `--require-metadata` to fail when ELF/PE checks cannot be completed. Use
+`--package <fresh-staging-directory>` to scan all installed files, including assets,
+and flag private PDBs, keys, maps, object files and raw IR. Together with
+`--fail-on-deny`, those private-artifact findings fail the release gate. Filename
+classification is a heuristic; review the full inventory too. Package changes
+such as resource aliases need a separate inventory review when the original and
+protected manifests intentionally differ.
 
 ## Authorize Scoped Protection
 

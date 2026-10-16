@@ -2,6 +2,8 @@
 from io import BytesIO
 import importlib.util
 from pathlib import Path
+import subprocess
+import sys
 import tempfile
 import unittest
 from zipfile import ZipFile
@@ -13,6 +15,22 @@ spec.loader.exec_module(site_hook)
 
 
 class PublicationTests(unittest.TestCase):
+    def test_downloaded_scanner_runs_without_repository_imports(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            with ZipFile(BytesIO(site_hook.skill_archive(site_hook.skill_contents(ROOT)))) as archive:
+                archive.extractall(root)
+            package = root / "package"
+            package.mkdir()
+            (package / "asset.dat").write_bytes(b"\x01ConfidentialKernel\x02")
+            report = root / "baseline"
+            result = subprocess.run([sys.executable, "-I", str(root / "cpp-leakage-audit/scripts/audit.py"),
+                "--package", str(package), "--deny", "ConfidentialKernel", "--fail-on-deny", "--out", str(report)],
+                cwd=root, capture_output=True, text=True, timeout=30)
+            self.assertEqual(result.returncode, 1, result.stderr)
+            self.assertTrue(report.with_suffix(".json").is_file())
+            self.assertTrue((root / "cpp-leakage-audit/references/windows.md").is_file())
+
     def test_archive_matches_canonical_files(self):
         contents = site_hook.skill_contents(ROOT)
         with ZipFile(BytesIO(site_hook.skill_archive(contents))) as archive:

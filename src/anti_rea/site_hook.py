@@ -11,6 +11,7 @@ SKILL_FILES = (
     "references/key-management.md",
     "references/operations.md",
     "references/integration.md",
+    "references/windows.md",
     "scripts/audit.py",
     "scripts/generate_keys.py",
     "scripts/decode.py",
@@ -61,6 +62,7 @@ def on_files(files, config):
         ("references/key-management.md", "skill/references/key-management.md"),
         ("references/operations.md", "skill/references/operations.md"),
         ("references/integration.md", "skill/references/integration.md"),
+        ("references/windows.md", "skill/references/windows.md"),
     ):
         files.append(File.generated(config, destination, content=contents[source].decode("utf-8")))
     files.append(File.generated(config, "downloads/cpp-leakage-audit.zip", content=skill_archive(contents)))

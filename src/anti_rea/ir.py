@@ -3,12 +3,28 @@ import re
 import subprocess
 from .crypto import opaque
 
-SCOPE = re.compile(r"\baegis::internal\b|\bprint_rtti\(\)::")
+SCOPE = re.compile(r"\baegis::internal\b|\bprint_rtti\((?:void)?\)'?::")
 ITANIUM = re.compile(r'^(?P<head>@(?P<quote>"?)(?P<symbol>_ZTS[^"\s]+)(?P=quote) = [^\n]*?constant )\[(?P<size>\d+) x i8\] c"(?P<raw>[^"\n]+)\\00"(?P<tail>[^\n]*)$', re.M)
 MSVC = re.compile(r'^(?P<head>@"(?P<symbol>\?\?_R0[^"\n]+)" = [^\n]*?global )(?P<layout>%rtti\.TypeDescriptor\d+|\{ ptr, ptr, \[\d+ x i8\] \}) \{ ptr (?P<vft>[^,]+), ptr null, \[(?P<size>\d+) x i8\] c"(?P<raw>[^"\n]+)\\00" \}(?P<tail>[^\n]*)$', re.M)
 
 
 def decode_type(symbol, raw, tool, msvc):
+    if msvc and tool is None:
+        import ctypes
+        from ctypes import wintypes
+        decoder = ctypes.WinDLL("dbghelp").UnDecorateSymbolName
+        decoder.argtypes = [ctypes.c_char_p, ctypes.c_char_p, wintypes.DWORD, wintypes.DWORD]
+        decoder.restype = wintypes.DWORD
+        buffer = ctypes.create_string_buffer(65536)
+        # Decode the complete TypeDescriptor symbol; raw type encodings need
+        # different flags in Microsoft's API than in llvm-undname.
+        if not decoder(symbol.encode("ascii"), buffer, len(buffer), 0):
+            raise ValueError("Windows could not decode MSVC RTTI: " + symbol)
+        decoded = buffer.value.decode("ascii")
+        suffix = " `RTTI Type Descriptor'"
+        if not decoded.endswith(suffix):
+            raise ValueError("Unsupported MSVC RTTI demangling: " + symbol)
+        return decoded.removesuffix(suffix)
     output = subprocess.run([str(tool), raw[1:] if msvc else symbol], check=True,
                             capture_output=True, text=True).stdout.strip()
     if msvc:

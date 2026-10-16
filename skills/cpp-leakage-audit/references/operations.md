@@ -56,12 +56,23 @@ UTF-8 JSON array of nonempty exact strings, for example:
 ["Private coefficient solve failed", "__internal_policy_flag", "kernel.cpp"]
 ```
 
-Paths and source basenames are always inventoried. `--package` finds regular
-ELF/PE files by magic and flags suspicious private-file paths. It does not parse
-archive/object formats, PDB contents, compressed debug data or every resource
-file. Add individual binary/assets with repeatable `--binary`. Symlinks are not
-followed during package discovery and leave a visible unchecked item; review
-targets explicitly, including legitimate shared-library aliases.
+Paths and source basenames are always inventoried. Repeatable `--package`
+inventories and scans every regular staged file, including text/resource assets,
+and flags suspicious private-file paths. Structured metadata checks apply to
+native-looking package members and explicitly selected binaries. Archive/object
+formats, PDB contents and compressed debug data are not parsed. Add individual
+binary/assets with repeatable `--binary`. Empty packages and symlinks are rejected
+rather than silently omitted; review targets explicitly, including legitimate
+shared-library aliases, and stage a regular-file inventory for acceptance.
+
+Capture an original-program report before repairs. After rebuilding, add
+`--baseline /private/reports/original.json` with a separate `--out`, identical
+binary/package ordering, filenames, corpus, allow rules and `--all-strings` mode.
+Schema-2 reports fingerprint the scanner and files and list resolved, persistent
+and introduced findings independently of offsets. Changed scanner versions,
+scope or inventories require a new baseline or separate explicit review, not an
+automatic improvement claim. Reports cannot overwrite inputs or enter a scanned
+release tree. Keep these files private.
 
 `--all-strings` adds the printable ASCII and ASCII-range UTF-16 inventory to the
 JSON/Markdown reports. It is a global readable-string inventory, not a Unicode
@@ -177,7 +188,7 @@ tests separately, and compare observed overhead against the user's budget.
 
 | Tool | `0` | `1` | `2` |
 | --- | --- | --- | --- |
-| Audit | Requested inventory and enabled gates passed | A requested deny/private/metadata gate failed | Invalid or unreadable input/configuration |
+| Audit | Requested inventory and enabled gates passed | A requested deny/private gate failed | Invalid input/configuration/baseline or required metadata checks incomplete |
 | Key generator | New private bundle persisted | Not used | Dependency, destination or write failure |
 | Decoder | Inventory or all recognized events recovered | One or more recognized events failed | Setup/input failure or no supported events |
 | Doctor | Inventory and requested capability requirements passed | A requested capability is unavailable/unverified | Invalid arguments |

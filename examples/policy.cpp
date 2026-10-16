@@ -25,3 +25,7 @@ void print_rtti() {
     // A runtime-decrypted ordinary string is not equivalent to a sealed diagnostic.
     std::cout << "Internal dispatch schedule uses a calibrated branch table" << '\n';
 }
+const std::type_info& peer_type(unsigned kind) {
+    using namespace aegis::internal;
+    return kind == 0 ? typeid(ResonantKernel) : typeid(third_party::Box<ResonantKernel>);
+}

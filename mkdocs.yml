@@ -84,7 +84,9 @@ nav:
       - Validation Guide: skill/references/validation.md
       - Recovery Tool Design: skill/references/recovery-tools.md
       - Key Generation and Lifecycle: skill/references/key-management.md
+      - Windows Validation: skill/references/windows.md
   - Evidence:
+      - Windows Native Results: windows-validation.md
       - Measurement Tools: measurement.md
       - Measured Results: comparison.md
       - Remaining Exposure: remaining-exposure.md

@@ -45,23 +45,33 @@ not generic protection rules. State the helper's supported ABI and adaptations.
 
 Read [remediation.md](references/remediation.md) when interpreting findings or
 planning changes. It explains the distinctions that affect correct mitigation.
+For PE artifacts or native Windows validation, read
+[windows.md](references/windows.md).
 
 ## Collect Evidence
 
-Run the bundled standalone scanner:
+Start by scanning the original program and its actual libraries/package, before
+any repair or rebuild. Save this immutable baseline with `--out`, including its
+SHA-256 inventory and an evidence-backed sensitive corpus. Verify that known
+leaks are detected. If originals are unavailable, record that the baseline is
+missing; a protected-only scan cannot establish improvement. An audit-only
+request ends with this assessment and does not require a protected rebuild.
+
+Run the bundled standalone scanner (use `--require-metadata` for binary acceptance):
 
 ```bash
 python <skill-directory>/scripts/audit.py --source <source-root> \
-  --binary <installed-executable> --binary <installed-library> --out <report-prefix>
+  --binary <original-executable> --binary <original-library> \
+  --deny <confirmed-sensitive-text> --require-metadata --out <private-baseline-prefix>
 ```
 
-Use `--package <staging-root>` for native artifact discovery and private-file
-inventory, `--deny-file <corpus.json>` for repeatable exact checks and
-`--all-strings` for a confidential global readable-string inventory. Source,
-binary and package scans are distinct: package discovery does not inspect every
-asset's contents or follow symlinks. Pass selected assets explicitly and review
-symlink destinations. `--require-metadata` makes unchecked structured inspection
-fail the gate; `--fail-on-private` gates unaccepted private-file candidates.
+Use repeatable `--package <staging-root>` for full-file inventory, native/asset
+scans and private-file checks, `--deny-file <corpus.json>` for repeatable exact
+checks and `--all-strings` for a confidential global readable-string inventory.
+Package symlinks are rejected rather than silently omitted; review their targets
+and stage an explicit regular-file inventory. `--require-metadata` fails on
+unchecked native inspection; `--fail-on-private` can gate private-file findings
+independently of the broader `--fail-on-deny` gate.
 
 Paths are always scanned. Add `--function`, `--variable` or `--deny` only for
 requested names or an evidence-backed sensitive corpus. Preserve a confirmed
@@ -77,6 +87,11 @@ Check stdout/stderr from authorized normal and intentional-failure scenarios whe
 safe. Do not trigger fatal tests against production services. Compare build and
 installed copies: debug separation, export policy and release stripping can differ.
 Inspect package contents for PDBs, private maps, raw IR and keys.
+Use `--package <staged-directory>` to inventory every file and flag private
+artifacts, including nonbinary assets. Keep these detailed reports private.
+`--fail-on-deny` fails on confirmed corpus matches and private package artifacts;
+`--require-metadata` fails on unavailable/malformed structured binary checks.
+Neither option means all candidate paths or all possible leaks have been cleared.
 
 ## Design Offline Recovery Tools When Requested
 
@@ -136,6 +151,12 @@ without authorization. Do not publish sensitive audit evidence or private keys.
 
 After an authorized repair, rebuild affected producers and consumers, run focused
 functional tests and re-scan the installed artifacts using the same corpus.
+Pass `--baseline <original-report.json>` and a new `--out` with the same binary
+ordering, corpus and allow rules. It rejects scope or inventory changes and
+reports resolved, persistent and introduced findings. Review path, export and
+runtime evidence as well as corpus matches. Audit resource renaming or intentional
+package additions separately when file inventories differ; do not edit the old
+baseline to manufacture a comparison.
 For RTTI changes include cross-library casts, type equality and exceptions. For
 path/resource changes test relocation. For obfuscation verify actual applied-pass
 reports and correctness, not just compiler success.

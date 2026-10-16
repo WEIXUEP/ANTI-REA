@@ -2,6 +2,7 @@
 import contextlib
 import io
 import json
+import os
 from pathlib import Path
 import sys
 import tempfile
@@ -66,8 +67,10 @@ class MeasurementTests(unittest.TestCase):
             differences(report)
 
     def test_driver_symlink_not_resolved(self):
-        with patch("anti_rea.measurement.shutil.which", return_value="/toolchain/bin/clang++"):
-            self.assertEqual(str(executable("clang++")), "/toolchain/bin/clang++")
+        driver = ROOT / "build/toolchain/bin/clang++"
+        with patch("anti_rea.measurement.shutil.which", return_value=str(driver)), \
+                patch.object(Path, "resolve", side_effect=AssertionError("Driver symlinks must not be resolved")):
+            self.assertEqual(executable("clang++"), driver)
 
     def test_explicit_toolchain_checked(self):
         with patch("anti_rea.measurement.executable", side_effect=[Path("/bin/clang++"), Path("/bin/opt")]), \
@@ -80,7 +83,7 @@ class MeasurementTests(unittest.TestCase):
                 patch("anti_rea.measurement.doctor"):
             compiler, optimizer = toolchain(ROOT)
             self.assertEqual(compiler, ROOT / "build/toolchains/xollvm23/bin/clang++")
-            self.assertEqual(optimizer, compiler.parent / "opt")
+            self.assertEqual(optimizer, compiler.parent / ("opt.exe" if os.name == "nt" else "opt"))
 
     def test_default_three_profile_command(self):
         with tempfile.TemporaryDirectory() as directory:

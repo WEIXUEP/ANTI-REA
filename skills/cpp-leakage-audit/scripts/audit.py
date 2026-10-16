@@ -18,6 +18,14 @@ SOURCE_PATTERNS = {
     "rtti-name": r"\btypeid\s*\(|\.name\s*\(\s*\)",
     "explicit-export": r"__declspec\s*\(\s*dllexport|visibility\s*\(\s*\"default\"",
 }
+PRIVATE_SUFFIXES = {".pdb", ".ilk", ".exp", ".obj", ".o", ".lib", ".a", ".ll", ".bc", ".map", ".debug", ".key", ".pem"}
+
+
+def private_artifact(path):
+    path = Path(path)
+    return (path.suffix.lower() in PRIVATE_SUFFIXES
+            or any(part.lower() in {"private", ".private", "maps", "ir"} for part in path.parts)
+            or bool(re.search(r"(?:^|[-_.])(?:keys?|codebook)(?:[-_.]|$)|(?:private|secret)[-_.]|^diagnostics\.json$", path.name, re.I)))
 
 
 def path_matches(text):
@@ -61,31 +69,51 @@ def metadata(data):
             import pefile
         except ImportError:
             return [], ["PE imports/exports/CodeView: install pefile"]
-        pe = pefile.PE(data=data)
-        for entry in getattr(pe, "DIRECTORY_ENTRY_IMPORT", []):
-            rows.append(("import-library", entry.dll.decode(errors="replace")))
-            for item in entry.imports:
-                if item.name:
-                    rows.append(("import-symbol", item.name.decode(errors="replace")))
+        # Parse only metadata covered by this auditor. Unwind/disassembly
+        # warnings are unrelated, while recovered import/export failures must
+        # remain visible as incomplete checks.
+        pe = pefile.PE(data=data, fast_load=True)
+        pe.parse_data_directories(directories=[pefile.DIRECTORY_ENTRY[name] for name in (
+            "IMAGE_DIRECTORY_ENTRY_IMPORT", "IMAGE_DIRECTORY_ENTRY_DELAY_IMPORT",
+            "IMAGE_DIRECTORY_ENTRY_EXPORT", "IMAGE_DIRECTORY_ENTRY_DEBUG")])
+        rows.append(("pe-machine", hex(pe.FILE_HEADER.Machine)))
+        for directory, prefix in (("DIRECTORY_ENTRY_IMPORT", "import"), ("DIRECTORY_ENTRY_DELAY_IMPORT", "delay-import")):
+            for entry in getattr(pe, directory, []):
+                rows.append((prefix + "-library", entry.dll.decode(errors="replace")))
+                for item in entry.imports:
+                    if item.name:
+                        rows.append((prefix + "-symbol", item.name.decode(errors="replace")))
+                    else:
+                        rows.append((prefix + "-ordinal", entry.dll.decode(errors="replace") + "!" + str(item.ordinal)))
         for item in getattr(getattr(pe, "DIRECTORY_ENTRY_EXPORT", None), "symbols", []):
-            if item.name:
-                rows.append(("export-symbol", item.name.decode(errors="replace")))
+            name = item.name.decode(errors="replace") if item.name else "ordinal:" + str(item.ordinal)
+            rows.append(("export-symbol", name))
+            if item.forwarder:
+                rows.append(("forwarded-export", name + " -> " + item.forwarder.decode(errors="replace")))
         for entry in getattr(pe, "DIRECTORY_ENTRY_DEBUG", []):
             if entry.struct.Type == 2:
                 start, size = entry.struct.PointerToRawData, entry.struct.SizeOfData
                 codeview = data[start:start + size]
                 if codeview.startswith(b"RSDS"):
+                    if len(codeview) < 25 or b"\0" not in codeview[24:]:
+                        raise ValueError("Invalid RSDS record")
                     rows.append(("pdb-reference", codeview[24:].split(b"\0", 1)[0].decode(errors="replace")))
+                elif codeview.startswith(b"NB10") and len(codeview) > 16 and b"\0" in codeview[16:]:
+                    rows.append(("pdb-reference", codeview[16:].split(b"\0", 1)[0].decode(errors="replace")))
+                else:
+                    unchecked.append("PE CodeView: unsupported or malformed record")
         if pe.FILE_HEADER.NumberOfSymbols:
             rows.append(("debug-metadata", "COFF symbol table present"))
+        unchecked.extend("PE metadata parser warning: " + warning for warning in pe.get_warnings())
     else:
         unchecked.append("Structured metadata: not an ELF or PE artifact")
     return rows, unchecked
 
 
-def scan_binary(path, functions=(), variables=(), deny=(), all_strings=False):
+def scan_binary(path, functions=(), variables=(), deny=(), data=None, *, all_strings=False):
     path = Path(path)
-    data = path.read_bytes()
+    if data is None:
+        data = path.read_bytes()
     findings, seen = [], set()
 
     def add(category, evidence, offset=None, encoding=None, status="candidate"):
@@ -105,30 +133,50 @@ def scan_binary(path, functions=(), variables=(), deny=(), all_strings=False):
             add("path", match[0], offset + match.start() * (2 if encoding.startswith("UTF") else 1), encoding)
         for match in FILENAME.finditer(text):
             add("filename", match[0], offset + match.start() * width, encoding)
-        for category, names in (("specified-function", functions), ("specified-variable", variables), ("denied-text", deny)):
-            for name in names:
-                if name and name in text:
-                    add(category, name, offset + text.index(name) * width, encoding, "confirmed")
-        if re.search(r"(?:_ZTS|_ZTI|\.?\?AV|\.?\?AU|65R[a-f0-9]{64})", text):
+        if re.search(r"(?:_ZTS|_ZTI|\.\?(?:A[UV]|[PQ][A-Z])|65R[a-f0-9]{64})", text):
             add("rtti", text, offset, encoding)
+    # Search the bytes themselves: short names, Unicode and strings next to
+    # nonprintable bytes must not disappear behind printable-string heuristics.
+    for category, names in (("specified-function", functions), ("specified-variable", variables), ("denied-text", deny)):
+        for name in names:
+            if not name:
+                continue
+            for encoding in ("utf-8", "utf-16le", "utf-16be"):
+                needle = name.encode(encoding)
+                start = 0
+                while (offset := data.find(needle, start)) >= 0:
+                    add(category, name, offset, encoding.upper(), "confirmed")
+                    start = offset + len(needle)
     try:
         rows, unchecked = metadata(data)
         for category, evidence in rows:
             add(category, evidence, status="confirmed")
     except Exception as error:
         unchecked = ["Structured metadata parse failed: " + type(error).__name__]
-    # Exact sensitive matches are not limited to printable-string boundaries.
-    # This also finds short, Unicode or multiline corpus entries.
-    for category, names in (("specified-function", functions), ("specified-variable", variables), ("denied-text", deny)):
-        for name in names:
-            for encoding, codec in (("ASCII", "utf-8"), ("UTF-16LE", "utf-16le"), ("UTF-16BE", "utf-16be")):
-                needle = name.encode(codec)
-                position = data.find(needle) if needle else -1
-                while position >= 0:
-                    label = "UTF-8" if encoding == "ASCII" and not name.isascii() else encoding
-                    add(category, name, position, label, "confirmed")
-                    position = data.find(needle, position + len(needle))
     return findings, unchecked
+
+
+def compare_baseline(result, baseline):
+    if baseline.get("schema") != 2 or "scan" not in baseline:
+        raise ValueError("Baseline must be a schema-2 audit from this scanner")
+    if baseline["scan"] != result["scan"]:
+        raise ValueError("Baseline scope, sensitive corpus or allow rules differ; repeat the same scan")
+    if baseline.get("scanner_sha256") != result["scanner_sha256"]:
+        raise ValueError("Baseline scanner version differs; capture a new baseline with the same scanner")
+    if baseline.get("not_checked"):
+        raise ValueError("Baseline has unperformed checks; complete them before comparing")
+    before = {row["artifact"] for row in baseline["artifacts"]}
+    after = {row["artifact"] for row in result["artifacts"]}
+    if before != after:
+        raise ValueError("Baseline artifact inventory differs; compare the same release contents")
+
+    def identities(report):
+        return {(row["artifact"], row["category"], row["evidence"], row["status"])
+                for row in report["findings"]}
+
+    old, new = identities(baseline), identities(result)
+    return {name: [dict(zip(("artifact", "category", "evidence", "status"), item)) for item in sorted(items)]
+            for name, items in (("resolved", old - new), ("persistent", old & new), ("introduced", new - old))}
 
 
 def scan_source(root):
@@ -156,28 +204,19 @@ def scan_source(root):
 
 
 def package_files(root):
-    """Inventory a staging tree without following package symlinks."""
+    """Inventory every staged file; reject links outside the audited inventory."""
     root = Path(root)
-    if not root.is_dir():
-        raise ValueError("Package input is not a directory")
-    natives, findings, unchecked = [], [], []
+    if not root.is_dir() or root.is_symlink():
+        raise ValueError("Package must be a real directory")
+    files = []
     for path in sorted(root.rglob("*")):
-        if path.is_symlink():
-            unchecked.append("Package symlink not followed: " + str(path))
-            continue
-        if not path.is_file():
-            continue
-        relative = path.relative_to(root)
-        with path.open("rb") as stream:
-            magic = stream.read(4)
-        if magic.startswith((b"\x7fELF", b"MZ")):
-            natives.append(path)
-        if (any(part.lower() in {"private", ".private", "maps", "ir"} for part in relative.parts)
-                or path.suffix.lower() in {".pdb", ".ll", ".bc", ".debug", ".key", ".pem", ".obj", ".o"}
-                or re.search(r"(?:(?:private|secret)[-_.]|compiler[-_]?keys|diagnostics\.json|^keys\.json$)", path.name, re.I)):
-            findings.append(dict(artifact=str(path), category="private-artifact", evidence=relative.as_posix(),
-                                 status="candidate", offset=None, encoding=None))
-    return natives, findings, unchecked
+        if path.is_symlink() or not path.resolve().is_relative_to(root.resolve()):
+            raise ValueError("Package contains a link outside the audited file inventory")
+        if path.is_file():
+            files.append(path)
+    if not files:
+        raise ValueError("Package is empty")
+    return files
 
 
 def markdown(result):
@@ -190,6 +229,14 @@ def markdown(result):
         lines.append(f"| {artifact} | {row['category']} | {row['status']} | `{evidence}` |")
     if result["not_checked"]:
         lines.extend(["", "## Not Checked", ""] + ["- " + text for text in result["not_checked"]])
+    if result.get("comparison") is not None:
+        lines.extend(["", "## Baseline Comparison", "",
+                      "Counts use unique artifact/category/evidence/status tuples, not byte offsets.", ""])
+        for category, rows in result["comparison"].items():
+            lines.append(f"- {category}: {len(rows)}")
+    lines.extend(["", "## Artifact Fingerprints", "", "| Artifact | Bytes | SHA-256 |", "| --- | --- | --- |"])
+    for row in result["artifacts"]:
+        lines.append(f"| {row['artifact']} | {row['size']} | `{row['sha256']}` |")
     return "\n".join(lines) + "\n"
 
 
@@ -197,7 +244,8 @@ def _main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--binary", action="append", default=[])
     parser.add_argument("--source")
-    parser.add_argument("--package", action="append", default=[], help="Staged tree: scan ELF/PE and flag private artifacts")
+    parser.add_argument("--package", action="append", default=[], help="Inventory and scan every file in a staged release directory; repeatable")
+    parser.add_argument("--baseline", help="Compare against a saved original-program audit JSON")
     parser.add_argument("--function", action="append", default=[])
     parser.add_argument("--variable", action="append", default=[])
     parser.add_argument("--deny", action="append", default=[])
@@ -209,57 +257,85 @@ def _main(argv=None):
     parser.add_argument("--require-metadata", action="store_true", help="Nonzero status for unperformed structured checks")
     parser.add_argument("--fail-on-private", action="store_true", help="Nonzero status for unaccepted package private-artifact candidates")
     args = parser.parse_args(argv)
-    if not args.binary and not args.source and not args.package:
-        parser.error("Provide --binary, --source and/or --package")
     if args.deny_file:
         corpus = json.loads(Path(args.deny_file).read_text(encoding="utf-8-sig"))
         if not isinstance(corpus, list) or not all(isinstance(item, str) and item for item in corpus):
             raise ValueError("Sensitive corpus must be a JSON array of nonempty strings")
         args.deny.extend(corpus)
-    result = dict(schema=1, findings=[], not_checked=[], limitations=[
+    if args.baseline and args.out and Path(args.out).with_suffix(".json").resolve() == Path(args.baseline).resolve():
+        parser.error("Use a separate output; do not overwrite the original baseline")
+    if not args.binary and not args.source and not args.package:
+        parser.error("Provide --binary, --package and/or --source")
+    rules = json.loads(Path(args.allow).read_text(encoding="utf-8-sig")) if args.allow else []
+    if not isinstance(rules, list):
+        raise ValueError("Allow rules must be an array")
+    for rule in rules:
+        if (not isinstance(rule, dict) or not isinstance(rule.get("pattern"), str)
+                or not isinstance(rule.get("reason"), str) or not rule["reason"].strip()):
+            parser.error("Every allow rule requires a reason")
+        re.compile(rule["pattern"])
+    result = dict(schema=2, scanner_sha256=hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
+                  findings=[], not_checked=[], artifacts=[], scan=dict(
+        functions=sorted(set(args.function)), variables=sorted(set(args.variable)),
+        deny=sorted(set(args.deny)), allow=rules, source=bool(args.source),
+        package=bool(args.package), package_count=len(args.package),
+        all_strings=args.all_strings, binary_count=len(args.binary)), limitations=[
         "Paths and source matches are candidates; arbitrary data may resemble paths.",
         "No disassembly, memory inspection, encrypted-data recovery, or complete local-variable enumeration.",
         "PDB contents and DWARF variable DIEs are not parsed; keep private debug artifacts out of releases."])
-    result["artifacts"] = []
-    binaries = [Path(path) for path in args.binary]
-    for package in args.package:
-        natives, rows, unchecked = package_files(package)
-        if not natives:
-            unchecked.append("No regular ELF/PE artifacts discovered in package: " + str(package))
-        binaries.extend(natives)
-        result["findings"].extend(rows)
-        result["not_checked"].extend(unchecked)
-    for binary in sorted(set(path.resolve() for path in binaries)):
+    inputs = [(f"binary/{index}/{Path(binary).name}", Path(binary), True)
+              for index, binary in enumerate(args.binary)]
+    packages = [Path(path) for path in args.package]
+    for index, package in enumerate(packages):
+        prefix = "package/" if len(packages) == 1 else f"package/{index}/"
+        for path in package_files(package):
+            inputs.append((prefix + path.relative_to(package).as_posix(), path, False))
+    if args.out:
+        destinations = [Path(args.out).with_suffix(suffix).resolve() for suffix in (".json", ".md")]
+        originals = {path.resolve() for _, path, _ in inputs}
+        if any(path in originals for path in destinations):
+            parser.error("Audit output must not overwrite an input artifact")
+        if any(path.is_relative_to(package.resolve()) for path in destinations for package in packages):
+            parser.error("Keep audit reports outside the release package")
+    for label, binary, explicit in inputs:
         data = binary.read_bytes()
-        result["artifacts"].append(dict(path=str(binary), bytes=len(data), sha256=hashlib.sha256(data).hexdigest()))
-        rows, unchecked = scan_binary(binary, args.function, args.variable, args.deny, args.all_strings)
+        result["artifacts"].append(dict(artifact=label, size=len(data), sha256=hashlib.sha256(data).hexdigest()))
+        rows, unchecked = scan_binary(binary, args.function, args.variable, args.deny,
+                                      data=data, all_strings=args.all_strings)
+        for row in rows:
+            row["artifact"] = label
         result["findings"].extend(rows)
-        result["not_checked"].extend(str(binary) + ": " + item for item in unchecked)
-    if args.package:
-        result["limitations"].append("Package nonnative asset contents are not scanned automatically; pass selected assets with --binary. Symlink targets need separate scope review.")
+        native_name = binary.suffix.lower() in {".exe", ".dll", ".pyd", ".sys", ".so", ".dylib"} or ".so." in binary.name
+        if explicit or native_name or data.startswith((b"MZ", b"\x7fELF")):
+            result["not_checked"].extend(label + ": " + text for text in unchecked)
+        if not explicit and private_artifact(Path(label).relative_to("package")):
+            result["findings"].append(dict(artifact=label, category="private-artifact", evidence=label,
+                                            status="confirmed"))
     if args.source:
         result["findings"].extend(scan_source(args.source))
-    if args.allow:
-        rules = json.loads(Path(args.allow).read_text(encoding="utf-8-sig"))
-        if not isinstance(rules, list):
-            raise ValueError("Allow rules must be an array")
-        for rule in rules:
-            if not isinstance(rule, dict) or not isinstance(rule.get("pattern"), str) or not isinstance(rule.get("reason"), str) or not rule["reason"].strip():
-                parser.error("Every allow rule requires a reason")
-            pattern = re.compile(rule["pattern"])
-            for row in result["findings"]:
-                if pattern.search(row["evidence"]):
-                    row.update(status="allowed", reason=rule["reason"])
+    for rule in rules:
+        for row in result["findings"]:
+            if re.search(rule["pattern"], row["evidence"]):
+                row.update(status="allowed", reason=rule["reason"])
+    if args.baseline:
+        try:
+            result["comparison"] = compare_baseline(result, json.loads(Path(args.baseline).read_text(encoding="utf-8")))
+            result["baseline_sha256"] = hashlib.sha256(Path(args.baseline).read_bytes()).hexdigest()
+        except ValueError as error:
+            parser.error(str(error))
     if args.out:
         prefix = Path(args.out)
         prefix.parent.mkdir(parents=True, exist_ok=True)
         prefix.with_suffix(".json").write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
         prefix.with_suffix(".md").write_text(markdown(result), encoding="utf-8")
-    print(json.dumps(dict(findings=len(result["findings"]), not_checked=result["not_checked"])))
+    print(json.dumps(dict(findings=len(result["findings"]), artifacts=len(result["artifacts"]),
+                         not_checked=result["not_checked"], comparison={k: len(v) for k, v in result.get("comparison", {}).items()})))
+    if args.require_metadata and result["not_checked"]:
+        return 2
     return int((args.fail_on_deny and any(row["status"] == "confirmed" and row["category"] in {
-        "denied-text", "specified-function", "specified-variable"} for row in result["findings"]))
-        or (args.require_metadata and bool(result["not_checked"]))
-        or (args.fail_on_private and any(row["category"] == "private-artifact" and row["status"] != "allowed" for row in result["findings"])))
+        "denied-text", "specified-function", "specified-variable", "private-artifact"} for row in result["findings"]))
+        or (args.fail_on_private and any(row["category"] == "private-artifact" and row["status"] != "allowed"
+                                        for row in result["findings"])))
 
 
 def main(argv=None):

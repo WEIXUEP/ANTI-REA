@@ -6,6 +6,10 @@
 #include <string>
 #ifdef _WIN32
 #include <windows.h>
+#include <cstdlib>
+#ifdef _DEBUG
+#include <crtdbg.h>
+#endif
 #else
 #include <unistd.h>
 #endif
@@ -25,7 +29,18 @@ static std::filesystem::path executable_directory() {
 }
 
 int main(int argc, char** argv) {
+#ifdef _WIN32
+    SetErrorMode(SEM_FAILCRITICALERRORS | SEM_NOGPFAULTERRORBOX);
+    _set_abort_behavior(0, _WRITE_ABORT_MSG | _CALL_REPORTFAULT);
+#ifdef _DEBUG
+    _CrtSetReportMode(_CRT_ERROR, _CRTDBG_MODE_FILE);
+    _CrtSetReportFile(_CRT_ERROR, _CRTDBG_FILE_STDERR);
+#endif
+#endif
     std::string mode = argc > 1 ? argv[1] : "selftest";
+    if (mode == "rtti-test") {
+        return test_rtti();
+    }
     if (mode == "warning") {
         aegis::report(aegis::sites::iteration, 37);
         return 0;
