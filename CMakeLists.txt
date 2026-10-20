@@ -3,6 +3,7 @@ project(ANTI_REA VERSION 0.1.0 LANGUAGES CXX)
 include(CTest)
 find_package(Python3 3.10 REQUIRED COMPONENTS Interpreter)
 option(ANTI_REA_CODE_PROTECTION "Protect internal diagnostics, RTTI and paths" ON)
+option(ANTI_REA_CONSTANT_PROTECTION "Runtime-mask the five selected policy constants when protection is ON" ON)
 option(ANTI_REA_STRIP_RELEASE "Strip the installed ELF release copy" ON)
 set(ANTI_REA_OBFUSCATION "NONE" CACHE STRING "NONE, LIGHT, MEDIUM, HEAVY, MIXED_VM")
 set_property(CACHE ANTI_REA_OBFUSCATION PROPERTY STRINGS NONE LIGHT MEDIUM HEAVY MIXED_VM)
@@ -23,15 +24,18 @@ set(generated "${CMAKE_BINARY_DIR}/generated")
 file(MAKE_DIRECTORY "${generated}")
 file(GLOB_RECURSE example_sources CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/examples/*.cpp")
 file(GLOB protection_scripts CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/src/anti_rea/*.py")
-set_source_files_properties(${example_sources} PROPERTIES OBJECT_DEPENDS "${protection_scripts};${ANTI_REA_KEYS}")
+set_source_files_properties(${example_sources} PROPERTIES OBJECT_DEPENDS "${protection_scripts};${ANTI_REA_KEYS};${CMAKE_CURRENT_SOURCE_DIR}/examples/policy-constants.json")
 set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS
     "${ANTI_REA_KEYS}" "${CMAKE_CURRENT_SOURCE_DIR}/examples/diagnostics.json"
+    "${CMAKE_CURRENT_SOURCE_DIR}/examples/policy-constants.json"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/anti_rea/constants.py"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/anti_rea/generate.py" ${example_sources})
 set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS
     "${CMAKE_CURRENT_SOURCE_DIR}/src/anti_rea/crypto.py")
 execute_process(COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/tools/anti_rea.py"
     generate --root "${CMAKE_CURRENT_SOURCE_DIR}" --build "${CMAKE_BINARY_DIR}"
     --keys "${ANTI_REA_KEYS}" --protected "${ANTI_REA_CODE_PROTECTION}"
+    --constants "${ANTI_REA_CONSTANT_PROTECTION}"
     RESULT_VARIABLE generation_status COMMAND_ERROR_IS_FATAL ANY)
 
 add_library(engine SHARED examples/engine.cpp examples/diagnostics.cpp)

@@ -46,6 +46,22 @@ def main():
     for seed in (0, 1, 2, 3, 0xffffffff):
         policy = subprocess.run([str(exe), "startup", str(seed)], capture_output=True, text=True, check=True, timeout=15)
         check(int(policy.stdout.split()[0]) == expected(seed, 1), "Independent policy reference")
+    seeds = sorted({0, 0xffffffff, *(1 << bit for bit in range(32)),
+                    *((1 << bit) - 1 for bit in range(33))})
+    state = 0x341082ab
+    for _ in range(1024):
+        state = (state * 1664525 + 1013904223) & 0xffffffff
+        seeds.append(state)
+    evaluated = subprocess.run([str(exe), "policy-eval"], input="\n".join(map(str, seeds)) + "\n",
+                               capture_output=True, text=True, check=True, timeout=30)
+    pairs = [tuple(map(int, line.split())) for line in evaluated.stdout.splitlines()]
+    check(len(pairs) == len(seeds), "Policy evaluation coverage")
+    for seed, (dispatch, token) in zip(seeds, pairs):
+        check(token == (((seed ^ 0x5a827999) * 33) + (seed >> 7)) & 0xffffffff,
+              "Independent token boundary/random reference")
+        dispatch_reference = ((seed * 17) ^ 0xa341316c, (seed + 0xc8013ea4) ^ (seed >> 3),
+                              (seed ^ 0xad90777d) + (seed << 5), seed * 31 + 0x7e95761e)[seed & 3]
+        check(dispatch == dispatch_reference & 0xffffffff, "Independent dispatch boundary/random reference")
     check(run("resource").returncode == 0, "Relative resource lookup")
     warning = run("warning")
     check(warning.returncode == 0, "Warning return behavior")

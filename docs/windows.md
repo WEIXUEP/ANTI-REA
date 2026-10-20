@@ -142,6 +142,25 @@ The launcher handles `--`, `-TP`, `/Fo...`, nested response files and quoted pat
 MSVC runtime settings are preserved across frontend and code-generation phases.
 New build modes, modules, PCH, LTO and sanitizer combinations need separate work.
 
+## Selected Constant Protection
+
+`ANTI_REA_CONSTANT_PROTECTION=ON` applies by default with information protection,
+only to the five entries in `examples/policy-constants.json`. Set it OFF for a
+control at the same obfuscation level. `ANTI_REA_CODE_PROTECTION=OFF` always keeps
+plaintext. The unmasked path uses constant expressions directly, avoiding accessor
+calls that would distort VM costs. Masked expressions use volatile XOR-share reads
+to prevent optimization from folding them back to plaintext.
+
+Native acceptance scans all five constants, requires positive original matches
+and no protected matches, and checks same-key rebuilds and rotation. Append
+`--constants OFF` to the existing validator arguments to reproduce the earlier
+acceptance scope without numeric protection. The `policy-eval` mode reads unsigned
+32-bit inputs from stdin and prints dispatch/token outputs; independent formulas
+test 1088 boundary and deterministic random inputs.
+
+Both XOR shares ship in the binary. Recovery resistance and direct-byte hiding
+need separate checks; see the [reference review](reference-improvements.md).
+
 ## PE/PDB Release Rules
 
 ELF `strip --strip-all` is not the Windows release procedure. The demo emits

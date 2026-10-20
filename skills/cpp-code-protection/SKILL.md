@@ -72,6 +72,13 @@ opaque naming requires release maps and is not reversible encryption. Never
 fall back to plaintext on protection failure. Do not patch arbitrary linked
 bytes, disable RTTI or delete exports to satisfy a string scan.
 
+For selected numeric constants, runtime masking can reduce exact-byte signatures.
+Prevent optimizer folding and inspect the final linked artifact, including shared
+data and accessors outside VM bodies. Both shares and the decoder remain available
+to an analyst; distinguish a successful byte-hiding check from recovery resistance.
+Use an otherwise identical masking-OFF control to isolate incremental cost; see
+[remediation.md](references/remediation.md).
+
 Read the key lifecycle reference before generating or rotating secrets. Missing
 keys do not authorize regeneration or public-demo fallback. Read recovery-tool
 guidance before adding CLI/GUI features; use one bounded offline backend, explicit

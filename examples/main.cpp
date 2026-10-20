@@ -85,6 +85,13 @@ int main(int argc, char** argv) {
 #endif
         return 0;
     }
+    if (mode == "policy-eval") {
+        std::uint32_t value;
+        while (std::cin >> value) {
+            std::cout << policy_dispatch(value) << ' ' << policy_token(value) << '\n';
+        }
+        return std::cin.eof() ? 0 : 2;
+    }
     if (mode == "bench" || mode == "startup") {
         std::uint32_t result = argc > 2 ? static_cast<std::uint32_t>(std::stoul(argv[2])) : 123u;
         auto start = std::chrono::steady_clock::now();

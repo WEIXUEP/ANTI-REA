@@ -570,3 +570,11 @@ checks reused retained native demos: the selected constant remained visible and
 MIXED_VM's policy loop exceeded a 2x budget, both correctly failing their gates.
 See [changes, sources and measurements](reference-improvements.md). Production
 Palace was not involved.
+
+Follow-up fresh builds add switchable masking for five constants. NONE and
+MIXED_VM Debug/Release behavior and direct-byte checks passed. Masking alone
+added about 2.36% loop time; with VM it added about 54.93% and failed the
+incremental cost budget. Independent binary pairing still reconstructed all five.
+These are separate byte-hiding, performance and recovery findings, not general
+reverse-engineering resistance. The reference report's fresh-build section
+distinguishes the new evidence from the retained earlier samples.

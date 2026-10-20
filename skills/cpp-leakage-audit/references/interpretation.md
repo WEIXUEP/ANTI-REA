@@ -24,6 +24,13 @@ Numeric matches and crypto-looking tables do not establish an algorithm: a
 protector can insert decoys. Trace relevant data/control paths, preserve unknown
 reachability and corroborate semantics independently when execution is authorized.
 
+No raw constant match does not imply the value is hidden from analysis. Runtime
+XOR-share masking can remove an immediate yet leave both shares and reachable
+decoder instructions. For a known corpus, pair reconstruction plus code/data
+references can establish recoverability without keys or PDBs. Label this as a
+known-corpus recovery test, not blinded algorithm recovery or devirtualization;
+the bundled exact-byte scanner does not perform that reconstruction automatically.
+
 Local-variable labels invented by a decompiler are not necessarily source names.
 Stripping removes selected metadata, not strings needed at runtime. Opaque RTTI
 does not conceal inheritance, vtables or function bodies. Runtime-decrypted

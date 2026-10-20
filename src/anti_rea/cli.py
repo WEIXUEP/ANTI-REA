@@ -30,6 +30,7 @@ def main(argv=None):
     generator = sub.add_parser("generate", help="Internal CMake catalog generation")
     for name in ("root", "build", "keys", "protected"):
         generator.add_argument("--" + name, required=True)
+    generator.add_argument("--constants", default="ON")
     check = sub.add_parser("doctor", help="Check compiler/opt and optional xollvm capability")
     for name in ("compiler", "opt"):
         check.add_argument("--" + name, required=True)
@@ -45,7 +46,7 @@ def main(argv=None):
         if args.command == "keys":
             result = generate_keys(args.out)
         elif args.command == "generate":
-            result = generate(args.root, args.build, args.keys, enabled(args.protected))
+            result = generate(args.root, args.build, args.keys, enabled(args.protected), enabled(args.constants))
         elif args.command == "doctor":
             result = doctor(args.compiler, args.opt, args.level, args.plugin)
         elif args.token:

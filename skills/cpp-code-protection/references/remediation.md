@@ -12,6 +12,7 @@
 | Absolute library search path | RPATH/RUNPATH | Executable-relative installation policy | Relocated installed package |
 | Resource/source filename | Runtime locator or JIT source metadata | Stable aliases and executable-relative resolution | Resource loading; disclose readable resource contents |
 | Ordinary runtime string | Logs, labels, exception `what()` | Protect the owning interface; optional string obfuscation | Static scan and runtime behavior |
+| Selected numeric constants | Instruction immediates or referenced data | Scoped runtime masking, if byte-signature reduction is useful | Positive original corpus, optimized final-byte scan, independent arithmetic tests, decoder recovery attempt and incremental cost |
 | Dependency diagnostics | External runtime/library | Explicit separate dependency work if authorized | Rebuild dependency and consumers |
 
 Diagnostic public-key sealing, opaque naming, symbol removal and obfuscation solve
@@ -26,6 +27,29 @@ secrets. A private audit report can itself contain confidential paths and names.
 
 Never replace a filename substring throughout a linked binary as a general fix.
 Relocations, lengths, signatures and runtime contracts can depend on those bytes.
+
+## Runtime Constant Masking
+
+The demo uses an explicit `examples/policy-constants.json` catalog, generated
+`policy_constants.hpp`, and a private `constants.json` map. With information
+protection ON, `ANTI_REA_CONSTANT_PROTECTION=ON` replaces five policy constants
+with per-entry XOR shares derived at build time from a domain-separated keyed
+hash. The master key is not needed at runtime. `OFF` retains ordinary constant
+expressions for a matched control; information protection OFF always uses plaintext.
+
+Volatile reads prevent the optimizer from folding the shares back to plaintext.
+This is deterministic masking, not cryptographic confidentiality. The linked
+program contains enough information to reconstruct every value. In particular,
+adjacent shares allow a known-corpus XOR-pair scan; a failed raw-byte search is
+not evidence that constants are unrecoverable. Folding, split immediates and
+incidental matches also affect raw scans. Never suppress a hit to obtain a pass.
+
+Compile Debug and optimized Release with the production linker options. Check
+independent boundary/random arithmetic, casts/EH, key rotation and clean rebuilds.
+Require the same constant corpus and artifact inventory for before/after audits.
+Measure masking ON/OFF at each selected obfuscation level, keeping other controls
+and compiler settings equal. Record any failed performance budget even when byte
+hiding succeeds. Do not apply masking automatically to all constants or hot kernels.
 
 ## Function Value and Performance Policy
 

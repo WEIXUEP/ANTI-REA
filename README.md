@@ -35,6 +35,7 @@ GitHub metadata; forks can override it with `ANTI_REA_SITE_URL`.
 - Symbol stripping versus runtime strings: stripping alone does not remove both.
 - Relocatable, aliased resource paths and private build artifacts.
 - xollvm light, medium, heavy and mixed-function VM configurations.
+- Optional runtime masking of five policy constants, with separate byte-hiding and recovery checks.
 - A portable source/binary auditor and separate detection/protection skills.
 - Optional pinned REA analysis for baseline-bound native vulnerability investigation.
 

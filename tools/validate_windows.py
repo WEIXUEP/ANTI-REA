@@ -46,6 +46,8 @@ def main(argv=None):
     parser.add_argument("--sodium-runtime", type=Path, help="Runtime DLL copied into each fresh staged package")
     parser.add_argument("--generator", default="NMake Makefiles JOM", choices=["NMake Makefiles JOM", "Ninja"])
     parser.add_argument("--jobs", type=int, default=8)
+    parser.add_argument("--constants", choices=["ON", "OFF"], default="ON",
+                        help="Selected policy-constant masking in protected configurations")
     parser.add_argument("--obfuscation", default="NONE",
                         choices=["NONE", "LIGHT", "MEDIUM", "HEAVY", "MIXED_VM"],
                         help="Protected configurations only; original baseline always uses NONE")
@@ -70,7 +72,7 @@ def main(argv=None):
     output.mkdir(parents=True, exist_ok=False)
     shutil.copyfile(__file__, output / "validate_windows.py")
     evidence = dict(schema=1, status="running", platform=sys.platform, commands=[], configurations={},
-                    obfuscation=args.obfuscation,
+                    obfuscation=args.obfuscation, constants=args.constants,
                     limitations=["Demo acceptance only; no Palace, numerical dependency, LTO, PCH or arbitrary plugin ABI claim.",
                                  "Protected private PDBs retain linker symbols; source debug metadata is removed by the launcher."])
 
@@ -125,6 +127,7 @@ def main(argv=None):
                    "-DCMAKE_BUILD_TYPE=" + config, "-DCMAKE_CXX_COMPILER=" + str(compiler),
                    "-DPython3_EXECUTABLE=" + sys.executable, "-DANTI_REA_OPT=" + str(opt),
                    "-DANTI_REA_CODE_PROTECTION=" + ("ON" if protected else "OFF"),
+                   "-DANTI_REA_CONSTANT_PROTECTION=" + args.constants,
                    "-DANTI_REA_OBFUSCATION=" + (args.obfuscation if protected else "NONE"),
                    "-DANTI_REA_KEYS=" + str(keys),
                    "-DCMAKE_PREFIX_PATH=" + str(args.sodium_prefix.resolve())]
@@ -192,12 +195,19 @@ def main(argv=None):
             common.extend(["--binary", binary])
         for value in corpus:
             common.extend(["--deny", value])
+        constants = json.loads((ROOT / "examples/policy-constants.json").read_text())["values"]
+        if args.constants == "ON":
+            for value in constants.values():
+                common.extend(["--constant", f"u32le:0x{value:08x}"])
         report = output / (label + "-audit")
         extra = ["--baseline", output / (label.split("-protected")[0] + "-baseline-audit.json"), "--fail-on-deny"] if protected else []
         run([*common, *extra, "--require-metadata", "--out", report])
         original_report = json.loads(report.with_suffix(".json").read_text())
         if not protected:
             require({r["evidence"] for r in original_report["findings"] if r["category"] == "denied-text"} == set(corpus), "Baseline did not detect the known leaks")
+            if args.constants == "ON":
+                require({r["evidence"] for r in original_report["findings"] if r["category"] == "specified-constant"}
+                        == {f"u32le:0x{v:08x}" for v in constants.values()}, "Baseline did not expose all selected constants")
         run([sys.executable, audit, "--package", package, "--require-metadata", "--fail-on-deny",
              "--out", output / (label + "-package")])
         return fingerprints
@@ -226,12 +236,16 @@ def main(argv=None):
                     run([sys.executable, ROOT / "tools/anti_rea.py", "decode", "--build", build, "--rtti", names[label]["class"][0]])
                 evidence["configurations"][label] = dict(status="passed", rtti_checks=39,
                     obfuscation=args.obfuscation if protected else "NONE",
+                    constants=args.constants if protected else "OFF",
                     artifacts=stage(build, label, protected, mapping), mapped_types=len(mapping))
                 save()
         build = builds["release-protected"]
         before = maps["release-protected"]
+        constants_before = json.loads((build / "private/constants.json").read_text())
         run([cmake, "--build", build, "--clean-first", "--parallel", args.jobs])
         require(records(build) == before, "Same-key clean rebuild changed RTTI identifiers")
+        require(json.loads((build / "private/constants.json").read_text()) == constants_before,
+                "Same-key clean rebuild changed constant shares")
         evidence["same_key_rebuild"] = "passed"
         map_times = {p.name: p.stat().st_mtime_ns for p in (build / "private/maps").glob("*.json")}
         rotated = private / "rotated.json"
@@ -241,6 +255,10 @@ def main(argv=None):
         # object rebuilds without requiring --clean-first from the operator.
         build_and_test(build)
         after = records(build)
+        constants_after = json.loads((build / "private/constants.json").read_text())
+        require(constants_after["protected"] == (args.constants == "ON"), "Wrong constant protection state")
+        for old, new in zip(constants_before["constants"], constants_after["constants"], strict=True):
+            require((old != new) == (args.constants == "ON"), "Ineffective constant key rotation")
         refreshed = {p.name: p.stat().st_mtime_ns for p in (build / "private/maps").glob("*.json")}
         require(map_times.keys() == refreshed.keys() and all(refreshed[name] > time for name, time in map_times.items()),
                 "Key rotation did not rebuild every EXE/DLL compilation object")

@@ -1,21 +1,22 @@
 #include "engine.hpp"
 #include "obfuscation.hpp"
+#include "policy_constants.hpp"
 #include <iostream>
 
 AR_CONTROL std::uint32_t policy_dispatch(std::uint32_t value) {
     switch (value & 3u) {
     case 0:
-        return (value * 17u) ^ 0xa341316cu;
+        return (value * 17u) ^ AR_POLICY_VALUE(dispatch_case0);
     case 1:
-        return (value + 0xc8013ea4u) ^ (value >> 3);
+        return (value + AR_POLICY_VALUE(dispatch_case1)) ^ (value >> 3);
     case 2:
-        return (value ^ 0xad90777du) + (value << 5);
+        return (value ^ AR_POLICY_VALUE(dispatch_case2)) + (value << 5);
     default:
-        return (value * 31u) + 0x7e95761eu;
+        return (value * 31u) + AR_POLICY_VALUE(dispatch_case3);
     }
 }
 AR_TOKEN std::uint32_t policy_token(std::uint32_t value) {
-    return ((value ^ 0x5a827999u) * 33u) + (value >> 7);
+    return ((value ^ AR_POLICY_VALUE(token_xor)) * 33u) + (value >> 7);
 }
 void print_rtti() {
     using namespace aegis::internal;

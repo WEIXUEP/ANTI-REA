@@ -77,6 +77,21 @@ python tools/measure_windows.py `
 仅保护 OFF/ON，xollvm 为 `NONE`，不声称 PE 存在单独的 ELF 式 stripped 配置。
 实测与限制见[验证记录](windows-validation.zh-CN.md)。
 
+## 选定常量保护
+
+`ANTI_REA_CONSTANT_PROTECTION=ON` 默认随信息保护生效，只处理
+`examples/policy-constants.json` 中的五个策略常量。设置为 OFF 可在相同混淆等级下建立控制组；
+`ANTI_REA_CODE_PROTECTION=OFF` 始终保留明文。未保护版本直接使用常量表达式，
+避免访问函数干扰 VM 成本；保护版通过 volatile 读取 XOR 数据，防止优化折叠。
+
+原生验收工具默认扫描全部五个常量，要求未保护版正命中、保护版无命中，并检查同密钥重建及换钥。
+原有工具链参数后可增加 `--constants OFF`，复现不含常量保护的旧验收范围。
+运行时 `policy-eval` 从标准输入逐行读取 unsigned 32-bit 输入，输出 dispatch/token 结果；
+测试使用独立公式检查 1088 组边界和伪随机输入。
+
+两份 XOR 数据都在二进制中，可恢复性与直接字节扫描必须分开验收。
+实现、对照成本及恢复限制见[参考项目评估](reference-improvements.zh-CN.md)。
+
 ## MSVC RTTI 契约
 
 Itanium `_ZTS` 不是 MSVC RTTI。转换器识别 Clang x64 `TypeDescriptor`，修改名称缓冲及数组大小，保留运行字段和引用。不支持的布局明确失败。
