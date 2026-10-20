@@ -195,6 +195,10 @@ class AuditAcceptanceTests(unittest.TestCase):
             self.assertEqual(result.returncode, 2)
             self.assertIn("outside the release package", result.stderr)
             self.assertFalse((root / "audit.json").exists())
+            html_input = root / "original.html"
+            html_input.write_bytes(b"original HTML artifact")
+            self.assertEqual(self.run_cli("--binary", html_input, "--out", root / "original").returncode, 2)
+            self.assertEqual(html_input.read_bytes(), b"original HTML artifact")
 
     def test_msvc_rtti_pointer_names(self):
         with tempfile.TemporaryDirectory() as directory:

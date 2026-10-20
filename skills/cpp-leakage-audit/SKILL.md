@@ -118,6 +118,15 @@ Missing providers or failed queries are incomplete checks, never passing reviews
 
 ## Report
 
+Finish analysis with a private offline HTML report and a direct file link;
+retain original JSON, baselines and raw evidence. Follow
+[html-reporting.md](references/html-reporting.md) for the final reading interface,
+combined reports, authored findings, location anchors and browser validation.
+`audit.py --out` and `rea_audit.py --out` generate HTML by default;
+`scripts/report_html.py` combines supported evidence without executing targets.
+Honor an explicit alternative format. Rendering success never changes an audit
+or recovery verdict, and HTML reports must stay outside release/publication trees.
+
 Lead with prioritized confirmed findings, artifact identity and offset or source
 line, likely origin and scoped recommendations. List intentional public names,
 candidate matches needing review, unavailable checks and scanner limitations.

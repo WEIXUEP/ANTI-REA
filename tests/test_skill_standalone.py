@@ -42,7 +42,7 @@ class StandaloneSkillTests(unittest.TestCase):
         command = [sys.executable]
         if no_site:
             command.append("-S")
-        scripts = self.audit_scripts if name in {"audit.py", "rea_audit.py", "probe_constant_pairs.py"} else self.scripts
+        scripts = self.audit_scripts if name in {"audit.py", "rea_audit.py", "probe_constant_pairs.py", "report_html.py"} else self.scripts
         return subprocess.run([*command, str(scripts / name), *map(str, arguments)],
                               cwd=self.cwd, env=self.environment, input=stdin,
                               capture_output=True, text=True, timeout=30)
@@ -64,7 +64,7 @@ class StandaloneSkillTests(unittest.TestCase):
         return key_file, build, keys, token, mapping
 
     def test_entrypoint_help_and_inventory_without_site_packages(self):
-        for name in ("audit.py", "rea_audit.py", "probe_constant_pairs.py", "generate_keys.py", "decode.py", "doctor.py", "measure.py"):
+        for name in ("audit.py", "rea_audit.py", "probe_constant_pairs.py", "report_html.py", "generate_keys.py", "decode.py", "doctor.py", "measure.py"):
             with self.subTest(name=name):
                 result = self.run_tool(name, "--help", no_site=True)
                 self.assertEqual(result.returncode, 0, result.stderr)
@@ -148,6 +148,12 @@ class StandaloneSkillTests(unittest.TestCase):
         self.assertEqual(result.returncode, 1, result.stderr)
         findings = json.loads(report.with_suffix(".json").read_text())["findings"]
         self.assertTrue(any(row["category"] == "denied-text" and row["offset"] == 7 for row in findings))
+        self.assertTrue(report.with_suffix(".html").is_file())
+        combined = self.root / "combined.html"
+        rendered = self.run_tool("report_html.py", "--input", report.with_suffix(".json"),
+                                 "--out", combined, no_site=True)
+        self.assertEqual(rendered.returncode, 0, rendered.stderr)
+        self.assertIn("7 / 0x7", combined.read_text(encoding="utf-8"))
         package = self.root / "stage"
         package.mkdir()
         (package / "private-key.json").write_text("synthetic secret marker")

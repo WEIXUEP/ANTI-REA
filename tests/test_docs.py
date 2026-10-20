@@ -41,6 +41,7 @@ class PublicationTests(unittest.TestCase):
                 cwd=root, capture_output=True, text=True, timeout=30)
             self.assertEqual(result.returncode, 1, result.stderr)
             self.assertTrue(report.with_suffix(".json").is_file())
+            self.assertTrue(report.with_suffix(".html").is_file())
             self.assertFalse((root / "cpp-code-protection").exists())
 
     def test_archives_match_canonical_files(self):
@@ -72,6 +73,7 @@ class PublicationTests(unittest.TestCase):
                                     cwd=root, capture_output=True, text=True, timeout=30)
             self.assertEqual(result.returncode, 0, result.stderr)
             self.assertIn('"status": "planned"', result.stdout)
+            self.assertTrue((root / "plan/report.html").is_file())
             self.assertFalse((root / "third_party/rea").exists())
 
     def test_capabilities_are_separate(self):

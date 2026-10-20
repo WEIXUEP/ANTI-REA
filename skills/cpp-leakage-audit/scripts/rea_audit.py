@@ -5,6 +5,7 @@ import hashlib
 import json
 from pathlib import Path, PurePosixPath
 import re
+import runpy
 import shutil
 import subprocess
 import sys
@@ -256,6 +257,8 @@ def main(argv=None):
             report.update(status="incomplete", error="Target unavailable after analysis: " + str(error))
         (output / "report.json").write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
         (output / "report.md").write_text(markdown(report), encoding="utf-8")
+        renderer = runpy.run_path(str(Path(__file__).with_name("report_html.py")))["render"]
+        (output / "report.html").write_text(renderer([(str(output / "report.json"), report)]), encoding="utf-8")
         print(json.dumps(dict(status=report["status"], candidates=len(report["candidates"]), report=str(output / "report.json"))))
         return 2 if report["status"] == "incomplete" else 0
     except (OSError, ValueError, TypeError, KeyError) as error:

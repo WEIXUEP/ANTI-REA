@@ -77,6 +77,25 @@ An audit does not authorize rebuilding, stripping, generating keys or installing
 toolchains. The skill can recommend fixes and compare a provided rebuilt release
 using the same corpus and inventory, without performing those changes itself.
 
+## Final HTML Analysis
+
+Analysis now ends with an offline HTML report, while JSON, Markdown, baselines and
+raw evidence remain available. `audit.py --out` and `rea_audit.py --out` generate
+HTML automatically. A private combined report can include scans, REA triage,
+numeric probes and authored recovery conclusions:
+
+```bash
+python <skill-directory>/scripts/report_html.py --input /private/original.json --input /private/protected.json --input /private/pairs.json --out /private/final/analysis.html --package-root /staged/release
+```
+
+Open the HTML directly. It includes report navigation, search, category/status
+filters, per-finding anchors, exact available offsets/lines, artifact hashes and
+expandable raw evidence. Coverage gaps stay visible. The default interface is
+Chinese; use `--lang en` for English. It needs no server or CDN. Evidence remains
+inert text, and rendering does not turn candidates into confirmed findings.
+The new renderer refuses existing outputs; retain private reports outside releases.
+See [HTML reporting and interface rules](skill/references/html-reporting.md).
+
 ## Verified Windows Leakage Checks
 
 The [native validation record](windows-validation.md) includes real REA/Ghidra
@@ -117,6 +136,7 @@ private traces, addresses or decoder, and does not provide one-click devirtualiz
 - [REA submodule, CLI/MCP interfaces and native security review](skill/references/rea.md)
 - [Virtualized function recovery](skill/references/vm-recovery.md)
 - [Numeric baseline and recovery countertest](skill/references/numeric-recovery.md)
+- [Final HTML reports and interface rules](skill/references/html-reporting.md)
 
 These pages and the allowlisted ZIP come from the same maintained skill sources.
 Source heuristics are not a C++ parser; exact byte matches are not proof of an

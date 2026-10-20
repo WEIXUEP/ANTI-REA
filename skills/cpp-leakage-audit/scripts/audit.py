@@ -7,6 +7,7 @@ import json
 import math
 from pathlib import Path
 import re
+import runpy
 import struct
 import sys
 
@@ -279,7 +280,7 @@ def _main(argv=None):
     parser.add_argument("--allow", help="JSON list of pattern/reason objects")
     parser.add_argument("--deny-file", help="UTF-8 JSON list of exact sensitive strings")
     parser.add_argument("--all-strings", action="store_true", help="Include readable strings; reports may be confidential")
-    parser.add_argument("--out", help="Report prefix; writes .json and .md")
+    parser.add_argument("--out", help="Private report prefix; writes .json, .md and offline .html")
     parser.add_argument("--fail-on-deny", action="store_true")
     parser.add_argument("--require-metadata", action="store_true", help="Nonzero status for unperformed structured checks")
     parser.add_argument("--fail-on-private", action="store_true", help="Nonzero status for unaccepted package private-artifact candidates")
@@ -322,8 +323,9 @@ def _main(argv=None):
         for path in package_files(package):
             inputs.append((prefix + path.relative_to(package).as_posix(), path, False))
     if args.out:
-        destinations = [Path(args.out).with_suffix(suffix).resolve() for suffix in (".json", ".md")]
+        destinations = [Path(args.out).with_suffix(suffix).resolve() for suffix in (".json", ".md", ".html")]
         originals = {path.resolve() for _, path, _ in inputs}
+        originals.update(Path(path).resolve() for path in (args.baseline, args.deny_file, args.allow) if path)
         if any(path in originals for path in destinations):
             parser.error("Audit output must not overwrite an input artifact")
         if any(path.is_relative_to(package.resolve()) for path in destinations for package in packages):
@@ -359,6 +361,8 @@ def _main(argv=None):
         prefix.parent.mkdir(parents=True, exist_ok=True)
         prefix.with_suffix(".json").write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
         prefix.with_suffix(".md").write_text(markdown(result), encoding="utf-8")
+        renderer = runpy.run_path(str(Path(__file__).with_name("report_html.py")))["render"]
+        prefix.with_suffix(".html").write_text(renderer([(str(prefix.with_suffix(".json")), result)]), encoding="utf-8")
     print(json.dumps(dict(findings=len(result["findings"]), artifacts=len(result["artifacts"]),
                          not_checked=result["not_checked"], comparison={k: len(v) for k, v in result.get("comparison", {}).items()})))
     if args.require_metadata and result["not_checked"]:

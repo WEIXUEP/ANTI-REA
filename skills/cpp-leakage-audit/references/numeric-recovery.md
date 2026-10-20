@@ -37,6 +37,8 @@ python <skill-directory>/scripts/probe_constant_pairs.py --binary /protected/bin
 
 JSON goes to stdout. Store it under a new private report path outside all release
 trees using the caller's normal output capture; the helper creates no files.
+Render that saved JSON into the final offline analysis report with
+`scripts/report_html.py`; see [html-reporting.md](html-reporting.md).
 Reports contain binary/tool SHA-256, the explicit corpus, input size, unchanged
 input verification, limits, coverage and file offsets. A candidate supplies
 `left`, `right`, `offset`, `right_offset` and their known XOR value. Offsets are
