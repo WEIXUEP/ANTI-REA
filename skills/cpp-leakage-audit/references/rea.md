@@ -121,6 +121,32 @@ checks establish correctness of protection, not recovery by REA. State whether
 dynamic tracing, symbolic execution or a custom devirtualizer was actually used;
 a failed static recovery does not establish that recovery is impossible.
 
+If running the owned test artifact is authorized, REA MCP
+`instrument_with_frida` can provide a separate dynamic-assisted investigation.
+This is outside the read-only static CLI bridge. `observe_native_calls` targets
+Mach-O/LLDB; it is not the Windows tracing interface. Verify local Frida support
+and use a bounded, naturally terminating test command. Ephemeral sessions detach
+instrumentation; detachment alone does not establish target exit.
+
+Capture runtime bytecode, actual dispatcher targets and relevant state; inspect
+selected handler/ALU instructions and corroborate them against the artifact.
+Separate observed targets from guessed paths and preserve failed hooks. Require
+an explicit artifact-specific decoder or reviewed reconstruction before claiming
+recovery; observing a VM return value alone is only an oracle.
+
+Frida observations may lack an artifact digest or platform in their Evidence.
+Supplement the selected file's before/after hash, main-module path, platform,
+architecture and script hash. Do not call a file hash full loaded-image
+attestation. Keep scripts, payloads and runtime material private.
+
+Generate equivalent code from recovered operations, compile it independently and
+compare direct original-function calls on boundary and disjoint holdout inputs.
+Preserve unsigned widths and shifts. Report analyst assistance, prior source
+knowledge, enabled VM preset/anti-debug settings and remaining coverage; a small
+VM-light recovery does not establish a universal devirtualizer. Embedded VM
+decryption material is distinct from an application's absent diagnostic private
+key or RTTI naming key.
+
 ## Corroborating Leakage Before and After Protection
 
 First capture the original scanner baseline and verify known-leaking controls.

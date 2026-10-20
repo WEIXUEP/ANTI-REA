@@ -87,3 +87,8 @@ fields from a debugger observing the program before encryption.
 The project reduces selected easy disclosures and gives developers a recovery
 workflow. It is not DRM, an anti-debugging system or proof against reverse
 engineering.
+
+The [native Windows investigation](windows-validation.md) recovered one VM-light
+function as equivalent C++ using REA/Frida, reviewed handlers and a specialized
+decoder, with 4360 distinct matching inputs. This is concrete recovery evidence
+for that artifact, not a general automatic devirtualization capability.

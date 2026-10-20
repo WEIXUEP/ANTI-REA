@@ -247,6 +247,9 @@ with four platform/permission skips.
 and dispatcher representations, but did not automatically reconstruct the original
 formula in this trial. This does not establish that recovery is impossible.**
 
+This is the static-stage result. The later dynamic-assisted investigation below
+recovers equivalent semantics for the same pinned function.
+
 A separate native run used the same LLVM/Intel environment, eight build jobs and
 `/DEBUG:FULL /OPT:REF /OPT:ICF /INCREMENTAL:NO`: OFF/NONE versus ON/MIXED_VM.
 Append `--obfuscation MIXED_VM` to the native acceptance command above; the default
@@ -322,3 +325,83 @@ Regressions completed 83 tests with four platform/permission skips; both skill
 formats, standalone ZIP tools and strict MkDocs build passed. Skill references
 remain English and now distinguish VM application, algorithm recovery and
 incomplete indirect-call graphs.
+
+## Windows VM Function Recovery (Dynamic Assistance, 2026-10-20)
+
+**The pinned VM-light `policy_token` function was recovered as equivalent C++
+using REA/Frida, analyst-reviewed handlers and an artifact-specific decoder.
+All 4360 distinct test inputs matched. This is not automatic static
+devirtualization by REA/Ghidra.**
+
+The original release EXE above was reused without rebuilding or modifying it:
+SHA-256 `28e69edcd5fe3e231a9479fa56f78a18cc12417ec21d2a0b7fc51f480ad1611b`.
+Existing REA 6.4.0/Ghidra 12.1.4 evidence was retained; new calls used REA MCP
+`instrument_with_frida`, Frida 17.23.2, Windows x64 and the owned demo's `startup`
+scenario.
+
+### Recovery Evidence
+
+The trace captured 31 runtime bytecode bytes, eight actual dispatches, register
+states and handler addresses. The previously undiscovered initialization entry
+was identified at RVA `0x4a8b0`. Its instructions expose masked AES round keys,
+nonce and bytecode ciphertext carried by the program. An offline decoder extracts
+these from the release PE and uses Node's standard AES-128-CTR implementation;
+all 31 decrypted bytes match the runtime capture. These are VM-internal cipher
+materials, not diagnostic private keys or the RTTI naming key.
+
+Position masks and the dispatch mapping recover operands; actual ALU case
+instructions establish XOR, multiplication, logical right shift and addition.
+Recorded handler/case instruction bytes were checked against the release PE,
+rather than inferring a formula from one input/output observation.
+
+| Bytecode offset | Recovered operation |
+| ---: | --- |
+| 0 | `local[0] = r0` |
+| 3 | `r1 = local[0]` |
+| 6 | `r2 = r1 ^ r7` |
+| 11 | `r3 = r2 * r8` |
+| 16 | `r4 = local[0]` |
+| 19 | `r5 = r4 >> r9`, logical |
+| 24 | `r6 = r3 + r5` |
+| 29 | `return r6` |
+
+The wrapper supplies `r0 = input`, `r7 = 0x5a827999`, `r8 = 33`, `r9 = 7`.
+Substituting the recovered program generates:
+
+```cpp
+std::uint32_t recovered_token(std::uint32_t input) {
+    return ((input ^ 0x5a827999u) * 33u) + (input >> 7u);
+}
+```
+
+Arithmetic is unsigned 32-bit with wraparound. Equivalent computation was
+recovered, not original variable names, comments or source formatting.
+
+### Independent Checks and Limits
+
+REA/Frida directly invoked the initialized original VM function on 264 boundary
+and deterministic inputs. Another 4096 distinct inputs, disjoint from that set,
+validated the recovered model. Generated C++ was compiled with the supplied
+clang-cl/Intel environment and run independently on all 4360 inputs; its outputs
+matched the VM's direct-call outputs with zero differences. The uninstrumented
+original startup and 39 RTTI/exception checks still pass, and file hashes are
+unchanged. The entire 32-bit input domain was not exhausted or formally proved.
+
+This was analyst-assisted, artifact-specific work, not a general devirtualizer
+or blinded resistance evaluation. The analyst had previously seen source and
+the unprotected control. The recovery script itself reads neither, and does not
+read private PDBs, IR, maps or key files. This is VM light with anti-debug and
+hardened behavior disabled, not a claim about arbitrary VMs or every function.
+
+Frida Evidence itself lacks artifact identity. Script payloads supplement the
+module path, file SHA-256, platform, architecture and Frida version, with before/
+after file hashing and instruction-byte checks. This is not cryptographic
+attestation of every loaded-memory byte. The initial two-byte indirect-jump hook
+failed and was retained; a longer preceding instruction sequence allowed target
+observation without counting the failed attempt as coverage.
+
+Private evidence is `build/rea-vm-recovery/20261020-r002/`. `reconstruction/`
+contains the offline report, generated C++ and runner snapshot;
+`native-check/result.json` records compilation and all 4360 comparisons. Original
+REA/Frida envelopes, scripts, failed attempts and test vectors are retained
+internally and excluded from public documentation and skill ZIPs.
