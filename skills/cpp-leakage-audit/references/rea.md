@@ -31,6 +31,43 @@ that the recorded submodule's build was verified. Do not use automatic `npx
 Upgrade as a separate change: select a commit, repeat interface/native checks,
 then commit the new gitlink. No REA code is copied into the Python scanner.
 
+### Optional IDA Backend
+
+The bridge also accepts `--provider ida`. An IDA installation directory alone
+does not configure REA: prepare a supported upstream MCP registration using the
+selected REA checkout's `docs/ida-provider.md`, then set `REA_IDA_MCP_CONFIG` to
+that JSON file. Use an existing attached GUI or a compatible headless database
+supervisor. Modern GUI tools are not interchangeable with the supported legacy
+attached profile. Record actual IDA/Hex-Rays and upstream versions separately
+from the REA adapter version.
+
+For example, with an already configured registration:
+
+```powershell
+$env:REA_IDA_MCP_CONFIG = 'D:/analysis/ida-mcp.json'
+python <skill>/scripts/rea_audit.py --baseline /private/protected.json `
+  --binary /protected/app.exe --rea-root /tools/rea --provider ida `
+  --action function --selector 0x140001000 --out /private/ida-function
+```
+
+The selector is a placeholder; obtain the current artifact's actual entry.
+Check IDA capability coverage before choosing an action: Ghidra value tracing,
+complete function ranges and CFG data are not implied by selecting IDA. Preserve
+unsupported results as gaps. Use the original binary, not an IDB, for identity.
+
+In the tested Windows IDA 9.1 setup, a venv launcher left worker cleanup
+incomplete. Using the actual Python interpreter with the isolated packages on
+its process-local `PYTHONPATH` passed the owned-worker cleanup checks. Treat this
+as a tested configuration, not a reason to suppress cleanup errors. Headless
+verification must confirm worker absence and private-workspace release.
+
+Hex-Rays type inference can change assembly rendering in a live database, such
+as adding operand-size annotations. Retain text-parity failures; distinguish
+rendering changes from changed instruction bytes before drawing conclusions.
+Do not silently normalize away the difference or claim full verifier success.
+Adding registration environment variables affects a newly started REA process;
+an existing client connection must reconnect to pick them up.
+
 ## Baseline, Plan, Then a Selected Query
 
 Capture `audit.py --binary ... --require-metadata --out ...` first using the

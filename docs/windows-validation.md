@@ -405,3 +405,39 @@ contains the offline report, generated C++ and runner snapshot;
 `native-check/result.json` records compilation and all 4360 comparisons. Original
 REA/Frida envelopes, scripts, failed attempts and test vectors are retained
 internally and excluded from public documentation and skill ZIPs.
+
+## IDA 9.1 Backend Integration (2026-10-20)
+
+Windows IDA Professional `9.1.25.0226`, idalib `9.1.250226` and Hex-Rays
+`9.1.0.250226` were connected to REA 6.4.0. The isolated Python 3.12 environment
+uses `ida-pro-mcp` 2.0.0 at upstream commit
+`c133c3853faa111a9b00ee615c013b720d0c4acd` and `idapro` 0.0.11. The headless
+supervisor uses stdio and one worker. Installation files were not rewritten and
+analysis targets were not executed.
+
+The final configuration passed real CLI/MCP verification on the same release
+package's `engine.dll` / `ar_compute`: positive procedure inventory/search,
+pseudocode, assembly, instruction and relationship parity, known string/xref
+matches, invalid-input rejection, worker absence and private-workspace release
+after close, and unchanged original bytes. The string oracle was confirmed in
+raw PE bytes; the xref oracle was independently checked in the PE export table.
+
+The audit skill's `rea_audit.py --provider ida` also completed the VM EXE wrapper
+query using the retained audit baseline and Evidence bound to the EXE SHA-256.
+The wrapper, constants and interpreter call are readable. This integration did
+not repeat algorithm recovery through IDA and does not establish automatic
+devirtualization.
+
+The initial venv-launcher configuration failed worker cleanup. Selecting the
+actual Python interpreter with process-local `PYTHONPATH` for the isolated
+packages passed final DLL verification. The VM EXE's complete verifier still
+failed an assembly text-parity assertion: Hex-Rays type inference added
+`xmmword ptr` annotations. That failure is retained and not counted as a full
+pass; the successful separate skill query does not close that verification gap.
+
+The local CLI entry is `G:\REA\rea-ida.cmd` with registration at
+`G:\REA\tools\ida-mcp.json`. The existing Codex REA environment now includes
+that registration path, preserving Ghidra as default. Reconnect REA to select
+`open_binary.provider_id: "ida"`. The original configuration was backed up.
+Private logs, failed attempts and final checks are retained in
+`build/ida-integration/20261020-r001/`.

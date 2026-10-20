@@ -308,3 +308,29 @@ Frida 版本，并检查分析前后文件哈希及具体指令字节。这不�
 完整私有证据：`build/rea-vm-recovery/20261020-r002/`。
 `reconstruction/` 保存离线解码报告、生成的 C++ 及恢复脚本快照；`native-check/result.json` 保存编译和
 4360 输入验收；原始 REA/Frida 信封、脚本、失败尝试和全部测试向量也保留，不随文档或 skill ZIP 发布。
+
+## IDA 9.1 后端接入（2026-10-20）
+
+本机 IDA Professional `9.1.25.0226`、idalib `9.1.250226` 和 Hex-Rays
+`9.1.0.250226` 已接入 REA 6.4.0 的 IDA 后端。桥接使用独立 Python 3.12 环境中的
+`ida-pro-mcp` 2.0.0，固定上游提交 `c133c3853faa111a9b00ee615c013b720d0c4acd`，
+以及 `idapro` 0.0.11。使用无界面 supervisor、stdio 和单 worker，未改写安装目录或执行目标程序。
+
+最终配置对同一发布包的 `engine.dll` / `ar_compute` 通过真实 CLI/MCP 验收：
+函数清单与搜索、伪代码、汇编、指令、关系结果一致；已知字符串和导出表交叉引用命中；
+无效请求被拒绝；关闭后 worker 不在清单中，临时工作目录释放，原文件哈希不变。
+字符串正对照在 PE 原始字节中确认，交叉引用正对照独立核对 PE 导出地址表槽位。
+
+检测 skill 的 `rea_audit.py --provider ida` 也已完成上述 VM EXE 的包装函数查询，
+沿用原审计 baseline，Evidence 绑定原 EXE 的 SHA-256。能读出 VM 包装、常量和解释器调用，
+本次未用 IDA 重新完成算法恢复，不能将接入成功等同于自动去虚拟化。
+
+首轮虚拟环境启动器配置的 worker 清理未通过；使用实际 Python 解释器并以进程局部
+`PYTHONPATH` 加载隔离环境中的包后通过最终 DLL 验收。VM EXE 的完整校验器仍有一项文本一致性失败：
+Hex-Rays 类型推导后，汇编显示新增 `xmmword ptr` 标注。该失败记录保留，不计为完整通过；
+独立的 skill 查询成功不覆盖这个校验缺口。
+
+本地入口为 `G:\REA\rea-ida.cmd`，注册文件为 `G:\REA\tools\ida-mcp.json`。
+Codex 的现有 REA 配置已增补该注册文件路径，默认后端仍为 Ghidra；重连 REA 后可通过
+`open_binary` 的 `provider_id: "ida"` 显式选择。原配置已备份。
+私有日志、失败尝试和最终验收保存在 `build/ida-integration/20261020-r001/`。
