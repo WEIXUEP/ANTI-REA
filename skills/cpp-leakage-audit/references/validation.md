@@ -23,3 +23,13 @@ Audit-only validation does not require source changes, key generation or a
 protected rebuild. If runtime tests are authorized, use isolated processes and
 report untested failure scenarios. A clean corpus scan is not a disassembler,
 general security assessment or guarantee against reverse engineering.
+
+For optional REA review, validate the plan against parsed risky imports and
+negative controls (ordinary strings, exports, similarly named safe functions).
+Confirm that changed binaries, ambiguous baseline identities, stale scanners,
+package-local reports and existing evidence directories are rejected. Backend
+failure/non-JSON output must remain incomplete. Extract the ZIP alone and run
+`rea_audit.py --help` and `--action plan` without REA or repository imports.
+Test command/envelope handling separately from actual provider verification;
+mock responses do not establish Windows Ghidra decompilation or vulnerability
+reachability. See [rea.md](rea.md) for the required evidence at each stage.

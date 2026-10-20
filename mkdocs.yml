@@ -83,6 +83,7 @@ nav:
       - Finding Interpretation: skill/references/interpretation.md
       - Audit Validation: skill/references/validation.md
       - Windows Audit: skill/references/windows.md
+      - REA Native Security Review: skill/references/rea.md
   - Code Protection Skill:
       - Using the Skill: using-protection-skill.md
       - Skill Instructions: protection-skill/index.md

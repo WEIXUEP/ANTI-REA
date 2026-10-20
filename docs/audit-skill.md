@@ -3,6 +3,8 @@
 `cpp-leakage-audit` is a self-contained, read-only source and native-release
 auditor. It finds exposed diagnostics, conditions, paths, names, RTTI and private
 package artifacts, and reports evidence-backed recommendations.
+Optional REA analysis extends it to native security investigation while keeping
+vulnerability candidates separate from confirmed information leaks.
 
 For encryption, build changes, keys and recovery tooling, use the independent
 [code protection skill](using-protection-skill.md). Neither skill requires the other.
@@ -50,6 +52,7 @@ using the same corpus and inventory, without performing those changes itself.
 - [Finding interpretation](skill/references/interpretation.md)
 - [Audit validation](skill/references/validation.md)
 - [Windows PE audit](skill/references/windows.md)
+- [REA submodule, CLI/MCP interfaces and native security review](skill/references/rea.md)
 
 These pages and the allowlisted ZIP come from the same maintained skill sources.
 Source heuristics are not a C++ parser; exact byte matches are not proof of an

@@ -1,4 +1,4 @@
 interface:
   display_name: "C++ Leakage Audit"
-  short_description: "Detect native information leaks with private evidence"
-  default_prompt: "Use $cpp-leakage-audit to inspect my C++ release artifacts and recommend evidence-backed mitigations."
+  short_description: "Audit native leaks and investigate security candidates"
+  default_prompt: "Use $cpp-leakage-audit to capture my original C++ release baseline, audit leaks and investigate native security candidates with REA when available."

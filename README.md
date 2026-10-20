@@ -34,10 +34,17 @@ GitHub metadata; forks can override it with `ANTI_REA_SITE_URL`.
 - Relocatable, aliased resource paths and private build artifacts.
 - xollvm light, medium, heavy and mixed-function VM configurations.
 - A portable source/binary auditor and separate detection/protection skills.
+- Optional pinned REA analysis for baseline-bound native vulnerability investigation.
 
 The example is a small generic computational engine, not a real solver. Its
 integer workload makes exact correctness comparisons easy and excludes numerical
 hot loops from obfuscation. No large numerical dependency is needed.
+
+The audit skill works independently. Its optional REA backend is pinned in
+`third_party/rea`; initialize it with `git submodule update --init third_party/rea`
+only when needed, then follow that revision's build/prerequisite instructions.
+An existing REA build can also be selected. See the [REA integration guide](skills/cpp-leakage-audit/references/rea.md)
+for baseline binding, read-only CLI queries, MCP use and security evidence limits.
 
 ## Quick Start: Linux
 

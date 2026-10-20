@@ -100,3 +100,51 @@ visible. Sealed payloads can produce path-looking candidates requiring review.
 Private-artifact classification uses filenames/package paths; renamed private
 data can evade those heuristics. PDB contents are not parsed. Protected PDBs
 retain linker symbols but lack source metadata removed by the launcher.
+
+## REA Static Review (2026-10-20)
+
+The optional [REA integration](skill/references/rea.md) was exercised on the
+retained, unprotected Release demo EXE and DLL. This is a new static review;
+the earlier four-configuration runtime acceptance above was not repeated.
+
+The new baseline recorded 271 leakage/metadata findings across two artifacts,
+with no unperformed structured metadata checks. Artifact SHA-256 identities:
+
+- `anti-rea-demo.exe`: `fff3ce2196d029a09a18ad27537febb2bf56adfe0412e68c9d9d9b86b4ef5f2f`.
+- `engine.dll`: `ce24efe2c4a92ccfebd226800800c146c239f1cb40ea4f47fe89704308210ee9`.
+
+The plan identified EXE imports `memcpy`/`memmove` and DLL import `memcpy` as
+review candidates. These are not confirmed vulnerabilities. Actual native
+queries used the installed official REA 6.4.0 Windows package, Ghidra 12.1.4,
+Node 24.19.0 and JDK 24.0.1; neither target was executed or modified.
+
+| Query | Observed result |
+| --- | --- |
+| EXE procedure search for `memcpy` | External import and thunk at `0x14000c199` |
+| EXE xrefs to that thunk | 38 reference addresses; reference kinds are not supplied by this operation |
+| DLL function `ar_compute` | Assembly, pseudocode, references and p-code for `0x180001230` |
+| DLL bounded value trace from that address | 11 nodes, 14 edges, one decompilation; no reported truncation or unknowns |
+
+The wrapper verifies baseline size/SHA-256, backend Evidence identity and
+operation, selected engine provenance, and unchanged target bytes after the
+query. Composed value tracing identifies its parent as `rea-workflow` and its
+constituent procedure as Ghidra. The complete raw JSON, limitations and errors
+remain private under `build/rea-audit-validation/20261020/`; interrupted or failed
+attempts were retained. Static flow does not establish exploitability, runtime
+reachability, or freedom from memory defects.
+
+The submodule pins upstream `bb154d1067b0fc250452b7d468d0b0523031a16f` (source
+package version 6.4.0). Its clean checkout and public interfaces were inspected;
+its full developer build was not performed. Native verification used the
+separately installed official package via `--rea-root`, not an invented built
+artifact in the submodule. IDA/Hopper, the other bridge actions and MCP client
+registration were not exercised. No performance comparison is claimed; CPU
+time and peak process-family memory were not measured.
+
+Portable regression checks cover risky-import positive/negative controls,
+baseline/scanner changes, package layout, preserved evidence, CLI argument
+boundaries, wrong-target/operation/provider envelopes, composed provenance,
+unavailable backends, and targets changed or removed during a query. The ZIP
+also runs planning without REA, repository imports or Python site packages.
+The full Python run completed 78 tests (four platform/permission skips); skill
+format validation and the strict MkDocs build also passed.

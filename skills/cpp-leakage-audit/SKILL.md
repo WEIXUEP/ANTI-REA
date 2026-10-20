@@ -1,6 +1,6 @@
 ---
 name: cpp-leakage-audit
-description: Inspect C++ source and ELF/PE release packages for exposed diagnostics, paths, symbols, RTTI and private artifacts. Use for evidence-backed leakage detection and before/after audits, not protection implementation or general vulnerability scanning.
+description: Inspect C++ source and ELF/PE releases for information leaks and investigate native vulnerability candidates using optional REA static analysis. Use for original-program baselines, before/after leakage audits, and evidence-backed native security review.
 ---
 
 # C++ Leakage Audit
@@ -18,6 +18,9 @@ The bundled `scripts/audit.py` runs with Python 3.10+ outside this repository.
 Optional pyelftools/pefile add structured ELF/PE checks; see
 [operations.md](references/operations.md) for commands, dependencies and limits.
 For Windows artifacts read [windows.md](references/windows.md).
+For native vulnerability investigation read [rea.md](references/rea.md). REA is
+an optional analysis backend; the standalone leakage scanner needs no REA, Node
+or decompiler installation.
 
 ## Establish Evidence
 
@@ -67,11 +70,40 @@ allow rules and inventory. Use `--baseline <original.json>` with a different
 hidden by editing the baseline. Report resolved, persistent and new findings.
 Read [validation.md](references/validation.md) for positive/negative controls.
 
+## Native Vulnerability Investigation
+
+Start with the original-program baseline above, even when the main request is
+security review. Bind every EXE/DLL to its own baseline artifact and SHA-256.
+Use `scripts/rea_audit.py --baseline <original.json> --binary <original-executable>
+--out <new-private-directory>` to derive review seeds from structured imports.
+This plan requires no REA installation and never counts imports as vulnerabilities.
+Leakage allow rules do not dismiss security candidates.
+
+Use REA MCP when already connected for iterative investigation; use the bundled
+bridge's explicit static actions for reproducible CLI evidence. The repository
+pins an optional REA submodule; an extracted skill can select an existing REA
+checkout with `--rea-root`. Consult the reference for initialization and queries.
+Do not download/build dependencies, register MCP, execute targets, annotate
+databases or replace retained projects as an implicit part of inspection.
+
+Trace selected sinks to actual call sites and callers, then inspect arguments,
+input origins, size arithmetic, validation and failure paths. Also review parser
+and allocation/lifetime logic when imports provide no useful seeds. Separate
+observed instructions, decompiler-derived flow, hypotheses and unknowns. A
+static call path alone does not establish runtime reachability or exploitability.
+Retain REA Evidence, unresolved indirect/alias edges and budget truncation.
+Missing providers or failed queries are incomplete checks, never passing reviews.
+
 ## Report
 
 Lead with prioritized confirmed findings, artifact identity and offset or source
 line, likely origin and scoped recommendations. List intentional public names,
 candidate matches needing review, unavailable checks and scanner limitations.
+Report security candidates separately, with a CWE hypothesis, exact call address,
+source-to-sink argument evidence, preconditions and remaining verification.
+Label a vulnerability confirmed only when the unsafe condition and its reachable
+input constraints are established; otherwise retain it as a candidate. Never
+assign CVEs or claim a complete security assessment from imports or strings.
 An allowlist requires a narrow expression and a reason; it must not erase whole
 categories such as Base64-looking strings or system paths.
 Zero corpus matches do not mean no leakage or resistance to reverse engineering.

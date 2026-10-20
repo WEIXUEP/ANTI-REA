@@ -41,6 +41,28 @@ class PublicationTests(unittest.TestCase):
                     for name, expected in contents.items():
                         self.assertEqual(archive.read(skill + "/" + name), expected)
 
+    def test_downloaded_rea_plan_runs_without_backend_or_site_packages(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            with ZipFile(BytesIO(site_hook.skill_archive(site_hook.skill_contents(ROOT)))) as archive:
+                archive.extractall(root)
+            scripts = root / "cpp-leakage-audit/scripts"
+            binary = root / "app.exe"
+            binary.write_bytes(b"MZ" + bytes(64))
+            # The malformed native fixture remains an explicit metadata gap.
+            baseline = root / "original"
+            command = [sys.executable, "-I", "-S"]
+            scan = subprocess.run([*command, str(scripts / "audit.py"), "--binary", str(binary),
+                                   "--out", str(baseline)], cwd=root, capture_output=True, text=True, timeout=30)
+            self.assertEqual(scan.returncode, 0, scan.stderr)
+            result = subprocess.run([*command, str(scripts / "rea_audit.py"),
+                                     "--baseline", str(baseline.with_suffix(".json")),
+                                     "--binary", str(binary), "--out", str(root / "plan")],
+                                    cwd=root, capture_output=True, text=True, timeout=30)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertIn('"status": "planned"', result.stdout)
+            self.assertFalse((root / "third_party/rea").exists())
+
     def test_capabilities_are_separate(self):
         audit = site_hook.skill_contents(ROOT, "cpp-leakage-audit")
         protection = site_hook.skill_contents(ROOT, "cpp-code-protection")

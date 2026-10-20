@@ -2,6 +2,10 @@ ANTI-REA contains original generic educational examples and protection tools.
 
 External tools are not bundled:
 
+REA: https://github.com/morluto/rea (MIT)
+  Optional Git submodule, separate from ANTI-REA and the downloadable skills.
+  Its own LICENSE and THIRD_PARTY_NOTICES.md govern REA and provider dependencies.
+
 xollvm: https://github.com/und3ath/xollvm
   Target revision: v0.11.1 / eb0850bd7cc87f551ad2948826605e518f5b8aa2
   License: Apache-2.0 WITH LLVM-exception
