@@ -36,6 +36,11 @@ the original program does not establish algorithm recovery.
 
 ## Static Analysis First
 
+If selected constants disappear as literal bytes, use the separate
+[numeric recovery countertest](numeric-recovery.md). Inspect shared-data XOR
+pairs and their code references before concluding that VM hides those values.
+Recovering a supplied constant is distinct from recovering the selected algorithm.
+
 Locate the current function using its callers, body ranges and executable
 metadata. Record symbols, maps, source or unprotected controls used as assistance.
 Do not silently copy the original implementation and call it recovered.

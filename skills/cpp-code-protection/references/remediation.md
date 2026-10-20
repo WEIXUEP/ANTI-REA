@@ -30,6 +30,9 @@ Relocations, lengths, signatures and runtime contracts can depend on those bytes
 
 ## Runtime Constant Masking
 
+Use [runtime-constants.md](runtime-constants.md) for the checked switches, native
+Windows commands, matched-control measurements and recovery countertest.
+
 The demo uses an explicit `examples/policy-constants.json` catalog, generated
 `policy_constants.hpp`, and a private `constants.json` map. With information
 protection ON, `ANTI_REA_CONSTANT_PROTECTION=ON` replaces five policy constants

@@ -20,6 +20,7 @@ and sealed-event recovery. No example checkout is required.
 | Recover supported diagnostics, locations and RTTI | `scripts/decode.py` |
 | Measure trusted arbitrary target workloads | `scripts/measure.py` |
 | Integrate C++ protection and selective obfuscation | Agent-guided target changes using the integration references |
+| Mask selected policy constants and test the tradeoff | [Runtime constants workflow](protection-skill/references/runtime-constants.md); demo generation requires a source checkout |
 | Design a decoder GUI | Guidance for an optional frontend over the shared backend; no GUI bundled |
 
 ```bash
@@ -57,12 +58,36 @@ Implementation requires user authorization. Design-only work does not authorize
 key generation or builds. Existing native/target audit tools can provide baseline
 and final evidence, so the detection skill is optional.
 
+## Selected Constants and Windows Acceptance
+
+The skill now includes the [checked constants workflow](protection-skill/references/runtime-constants.md):
+the `ANTI_REA_CONSTANT_PROTECTION` switch, private maps, native Windows validator
+commands using LLVM 23/Intel oneAPI, matched masking-OFF/ON controls, and
+independent measurement manifests. Demo generation and native acceptance require
+the source checkout; the downloaded skill still measures existing trusted targets
+independently. `decode.py` does not load the numeric constant map.
+
+```text
+Use $cpp-code-protection on this owned Windows demo. Preserve an original baseline.
+Mask only the selected policy constants. Validate Debug/Release behavior, RTTI/EH,
+DLL identity, production linker options, relocation and complete key rotation.
+Measure masking OFF/ON at the same transform level with the same key and settings.
+Report direct-byte hiding, recoverability and the agreed runtime/size budgets separately.
+```
+
+The tested demo hid five direct signatures while all five values remained
+recoverable from adjacent XOR shares. NONE masking added 2.36% loop time;
+MIXED_VM masking added 54.93% against its matched control, failing the 1.5x limit.
+These are demo measurements, not a default performance promise. See the
+[fresh-build evidence](reference-improvements.md#fresh-build-acceptance).
+
 ## Canonical Instructions
 
 - [Skill instructions](protection-skill/index.md)
 - [Independent operations](protection-skill/references/operations.md)
 - [Integration contract](protection-skill/references/integration.md)
 - [Remediation and function-selection policy](protection-skill/references/remediation.md)
+- [Runtime constants, controls and native acceptance](protection-skill/references/runtime-constants.md)
 - [Key generation and lifecycle](protection-skill/references/key-management.md)
 - [Offline recovery and GUI design](protection-skill/references/recovery-tools.md)
 - [Validation](protection-skill/references/validation.md)

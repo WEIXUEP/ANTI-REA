@@ -29,6 +29,24 @@ python <skill-directory>/scripts/audit.py --package /staged/release \
 还需检查调用者、共享表和相关引用，不能只查被虚拟化的函数体。
 参见[参考项目改进及 Windows 实测](reference-improvements.zh-CN.md)。
 
+## 常量掩码反证检查
+
+下载 ZIP 新增已独立验证的标准库工具：
+
+```bash
+python <skill-directory>/scripts/probe_constant_pairs.py --binary /protected/app.exe --constant u32le:0x5a827999 --constant u32le:0xa341316c
+```
+
+它逐字节检查相邻小端 DWORD 的 XOR 配对，记录哈希、偏移、覆盖范围，并复核输入未变。
+退出码 1 表示发现候选或扫描未完整；2 表示输入或完整性错误；0 仅表示这种特定表示没有匹配。
+不需要 REA、密钥、映射、PDB，也不执行目标；stdout 报告需私下保存。
+
+先对原程序建立 baseline 并确认原始常量可命中，再对每个保护 EXE/DLL 运行探测。
+候选需另用 REA 或指令检查确认相关代码引用，不能直接当成算法恢复。
+参见[完整流程及限制（英文）](skill/references/numeric-recovery.md)。
+纳入 Skill 前，工具已在保留的最终 NONE、MIXED_VM Windows EXE 上实测：
+两者均发现覆盖全部 5 项已知值的 5 个候选，扫描完整、哈希未变；另验证 ZIP 解压后的独立运行。
+
 ## 给代理的请求示例
 
 ```text
@@ -72,5 +90,6 @@ ZIP 包含通用调查指导，不包含该样本的私有 trace、地址或专�
 - [Windows PE 审计（英文）](skill/references/windows.md)
 - [REA 子模块、CLI/MCP 和漏洞调查（英文）](skill/references/rea.md)
 - [虚拟化函数恢复流程（英文）](skill/references/vm-recovery.md)
+- [数值 baseline 与恢复反证（英文）](skill/references/numeric-recovery.md)
 
 网站和 ZIP 使用相同的白名单源文件。源码启发式检测不是 C++ 解析器；字节匹配不能证明运行路径，零匹配也不意味着无法逆向。

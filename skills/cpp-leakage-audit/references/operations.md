@@ -63,6 +63,10 @@ with a new `--out`, identical binary/package ordering, names, corpus, allow rule
 and `--all-strings` setting. Schema-2 reports fingerprint the scanner and artifacts.
 Numeric constant specifications are also part of the comparison scope. A scanner
 upgrade requires a fresh original baseline; retain earlier reports unchanged.
+For masked DWORD constants, follow [numeric-recovery.md](numeric-recovery.md)
+after the exact-byte scan. The independent `scripts/probe_constant_pairs.py`
+requires only standard-library Python and supplies known-corpus candidates,
+explicit coverage and integrity checks; it does not confirm executing code use.
 Comparisons ignore byte-offset shifts but reject changed scope/inventory/scanner.
 Review renamed resources or added files separately; never edit the old baseline.
 Reports cannot overwrite inputs or enter a scanned release tree.

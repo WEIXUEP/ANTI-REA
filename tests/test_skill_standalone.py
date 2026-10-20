@@ -42,7 +42,7 @@ class StandaloneSkillTests(unittest.TestCase):
         command = [sys.executable]
         if no_site:
             command.append("-S")
-        scripts = self.audit_scripts if name in {"audit.py", "rea_audit.py"} else self.scripts
+        scripts = self.audit_scripts if name in {"audit.py", "rea_audit.py", "probe_constant_pairs.py"} else self.scripts
         return subprocess.run([*command, str(scripts / name), *map(str, arguments)],
                               cwd=self.cwd, env=self.environment, input=stdin,
                               capture_output=True, text=True, timeout=30)
@@ -64,7 +64,7 @@ class StandaloneSkillTests(unittest.TestCase):
         return key_file, build, keys, token, mapping
 
     def test_entrypoint_help_and_inventory_without_site_packages(self):
-        for name in ("audit.py", "rea_audit.py", "generate_keys.py", "decode.py", "doctor.py", "measure.py"):
+        for name in ("audit.py", "rea_audit.py", "probe_constant_pairs.py", "generate_keys.py", "decode.py", "doctor.py", "measure.py"):
             with self.subTest(name=name):
                 result = self.run_tool(name, "--help", no_site=True)
                 self.assertEqual(result.returncode, 0, result.stderr)
@@ -220,6 +220,24 @@ class StandaloneSkillTests(unittest.TestCase):
         self.assertTrue(all(row["status"] == "passed" for row in report["profiles"]))
         self.assertEqual(report["comparisons"][0]["status"], "failed")
         self.assertEqual(self.run_tool("measure.py", "--config", config, "--out", config, no_site=True).returncode, 2)
+
+    def test_downloaded_pair_probe_without_repo_keys_or_dependencies(self):
+        binary = self.root / "masked.bin"
+        # An unaligned pair with no literal target bytes: independent known corpus.
+        data = b"x" + bytes.fromhex("e983ed9370fa6fc9")
+        binary.write_bytes(data)
+        self.assertNotIn(bytes.fromhex("9979825a"), data)
+        result = self.run_tool("probe_constant_pairs.py", "--binary", binary,
+                               "--constant", "u32le:0x5a827999", no_site=True)
+        self.assertEqual(result.returncode, 1, result.stderr)
+        report = json.loads(result.stdout)
+        self.assertTrue(report["complete"])
+        self.assertEqual(report["sha256"], hashlib.sha256(data).hexdigest())
+        self.assertEqual([row["offset"] for row in report["findings"]], [1])
+        self.assertEqual(binary.read_bytes(), data)
+        result = self.run_tool("probe_constant_pairs.py", "--binary", binary,
+                               "--constant", "u32le:0x5a827999", "--max-bytes", "8", no_site=True)
+        self.assertEqual(result.returncode, 2, result.stderr)
 
     def test_measurement_validates_all_profiles_before_execution(self):
         marker = self.root / "must-not-exist"

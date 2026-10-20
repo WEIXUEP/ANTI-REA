@@ -1,6 +1,6 @@
 ---
 name: cpp-code-protection
-description: Guide and implement scoped C++ diagnostic encryption, opaque RTTI names, release stripping and selective obfuscation; manage keys and offline recovery tools. Use for authorized protection changes, not read-only leakage detection.
+description: Guide and implement scoped C++ diagnostic encryption, opaque RTTI names, selected numeric masking, release stripping and selective obfuscation; validate behavior, recovery limits and performance with matched controls. Manage keys and offline recovery tools. Use for authorized protection changes, not read-only leakage detection.
 ---
 
 # C++ Code Protection
@@ -27,6 +27,7 @@ other producers before adapting them. A GUI is design guidance, not bundled UI.
 | Recover diagnostics, locations and RTTI | `scripts/decode.py`; [recovery-tools.md](references/recovery-tools.md) |
 | Implement diagnostics, RTTI, build and release protection | [integration.md](references/integration.md) |
 | Choose controls and function-level obfuscation | [remediation.md](references/remediation.md) |
+| Integrate selected constants and run matched-control acceptance | [runtime-constants.md](references/runtime-constants.md) |
 | Test semantics, selection and fresh release artifacts | [validation.md](references/validation.md) |
 | Handle clang-cl/MSVC ABI and private PDBs | [windows.md](references/windows.md) |
 | Compare trusted target workloads | `scripts/measure.py` |
@@ -76,8 +77,11 @@ For selected numeric constants, runtime masking can reduce exact-byte signatures
 Prevent optimizer folding and inspect the final linked artifact, including shared
 data and accessors outside VM bodies. Both shares and the decoder remain available
 to an analyst; distinguish a successful byte-hiding check from recovery resistance.
-Use an otherwise identical masking-OFF control to isolate incremental cost; see
-[remediation.md](references/remediation.md).
+Use an otherwise identical masking-OFF control to isolate incremental cost. Read
+[runtime-constants.md](references/runtime-constants.md) for the verified demo
+switches, Windows commands, control matrix and recovery countertest before using
+this mechanism. The downloaded skill guides integration; it does not bundle the
+demo generator. The decoder does not consume the numeric constant map.
 
 Read the key lifecycle reference before generating or rotating secrets. Missing
 keys do not authorize regeneration or public-demo fallback. Read recovery-tool
@@ -104,3 +108,6 @@ correctness oracle or proof that xollvm ran.
 Report implemented controls, actual artifacts and checks, residual exposures,
 unsupported platforms and pending performance decisions. Distinguish encryption,
 opaque naming, stripping and obfuscation; none makes native code unreversible.
+Keep behavior, direct-byte hiding, recovery resistance and cost verdicts separate.
+A known-corpus recovery or failed budget remains a failure of that claim even
+when runtime compatibility and the direct-byte gate pass.

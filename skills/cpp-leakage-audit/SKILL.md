@@ -1,6 +1,6 @@
 ---
 name: cpp-leakage-audit
-description: Audit C++ source and ELF/PE releases for information leaks, investigate native vulnerability candidates, and assess virtualized-function recovery with optional REA. Use for original-program baselines, before/after audits, and evidence-backed recovery investigations.
+description: Audit C++ source and ELF/PE releases for information leaks, probe numeric masking with known-corpus XOR pairs, investigate native vulnerability candidates, and assess virtualized-function recovery with optional REA. Use for original-program baselines, before/after audits, and evidence-backed recovery investigations.
 ---
 
 # C++ Leakage Audit
@@ -27,6 +27,10 @@ or decompiler installation.
 For virtualized-function inspection or recovery, read
 [vm-recovery.md](references/vm-recovery.md). That workflow uses REA when available;
 it does not provide a generic devirtualizer.
+For masked numeric constants, read
+[numeric-recovery.md](references/numeric-recovery.md). The bundled
+`scripts/probe_constant_pairs.py` checks known adjacent DWORD XOR pairs with
+standard-library Python; it needs no key, map, REA or target execution.
 
 ## Establish Evidence
 
@@ -64,6 +68,10 @@ Widths and byte order are explicit; a hit confirms bytes, not their semantic use
 Review the core function's callers, callees and shared tables as well as its
 body. Record the reviewed neighborhood and unresolved edges; function-level VM
 protection does not by itself hide constants in wrappers or global data.
+If exact bytes disappear, run the numeric recovery countertest when applicable.
+Record pair candidates separately from code-reference confirmation and tested
+algorithm recovery; the helper only supplies the first layer. An incomplete
+probe or missing REA provider cannot pass a recovery-resistance claim.
 Read [interpretation.md](references/interpretation.md) to classify findings and
 recommend a mitigation without equating stripping with encryption.
 Preserve required imports and public exports; decompiler-generated variable

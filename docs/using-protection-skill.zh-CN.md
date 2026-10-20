@@ -15,6 +15,7 @@
 | 恢复支持格式的诊断、位置、RTTI | `scripts/decode.py` |
 | 测量可信目标工作负载 | `scripts/measure.py` |
 | C++ 保护和选择性混淆 | 代理依据参考文档修改目标 |
+| 指定策略常量掩码与取舍验证 | [常量操作流程（英文）](protection-skill/references/runtime-constants.md)；demo 生成需源码仓库 |
 | 解码 GUI 设计 | 基于共享后端的设计指导，未附带 GUI |
 
 ```bash
@@ -45,12 +46,33 @@ python <skill-directory>/scripts/measure.py --config workloads.json \
 
 仅设计任务不包含生成密钥或构建。现有审计工具也可提供 baseline 和最终证据，检测 skill 不是前置依赖。
 
+## 常量保护与 Windows 验收
+
+Skill 新增[已核对的常量操作流程（英文）](protection-skill/references/runtime-constants.md)，
+包含 `ANTI_REA_CONSTANT_PROTECTION` 开关、私有映射、LLVM 23/Intel oneAPI 的 Windows
+验收命令、同级掩码 OFF/ON 对照及独立测量配置。demo 生成和原生验收需已有源码仓库，
+下载的 Skill 则可独立测量现有可信程序。`decode.py` 不读取数值常量映射。
+
+```text
+使用 $cpp-code-protection 验证这个自有 Windows demo，先保留原始 baseline。
+只掩码选定策略常量，验证 Debug/Release 行为、RTTI/EH、跨 DLL 类型识别、
+正式链接参数、搬迁及换钥后的完整重编译。
+在同一混淆级别、同一密钥和参数下比较掩码 OFF/ON，
+分别报告原始字节隐藏、可恢复性、事先约定的运行和体积预算。
+```
+
+已测 demo 的 5 项原始字节签名消失，但全部仍可从相邻 XOR 分片恢复。
+NONE 下掩码增加 2.36% 循环时间；MIXED_VM 下相对同级对照增加 54.93%，
+未通过 1.5 倍时间门槛。这些是 demo 实测，不能作为其他项目的性能承诺。
+参见[新构建验收记录](reference-improvements.zh-CN.md)。
+
 ## 规范说明
 
 - [Skill 说明（英文）](protection-skill/index.md)
 - [独立操作（英文）](protection-skill/references/operations.md)
 - [接入契约（英文）](protection-skill/references/integration.md)
 - [修复与函数选择（英文）](protection-skill/references/remediation.md)
+- [运行时常量、对照与原生验收（英文）](protection-skill/references/runtime-constants.md)
 - [密钥生命周期（英文）](protection-skill/references/key-management.md)
 - [离线恢复和 GUI（英文）](protection-skill/references/recovery-tools.md)
 - [验证（英文）](protection-skill/references/validation.md)

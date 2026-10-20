@@ -42,6 +42,28 @@ checks and `--fail-on-deny`. A hit proves bytes, not their computational role.
 Review callers, shared tables and references beyond the virtualized function.
 See [reference review and Windows checks](reference-improvements.md).
 
+## Masked Constant Countertest
+
+The downloaded ZIP includes the independently tested standard-library helper:
+
+```bash
+python <skill-directory>/scripts/probe_constant_pairs.py --binary /protected/app.exe --constant u32le:0x5a827999 --constant u32le:0xa341316c
+```
+
+It checks adjacent little-endian DWORD XOR pairs at every file alignment, records
+hashes/offsets/coverage, and verifies that the input remains unchanged. Exit 1
+means candidates or incomplete coverage; exit 2 means invalid input or integrity
+failure. Exit 0 only means this particular representation had no matches.
+It runs without REA, keys, maps, PDBs or target execution. Save stdout privately.
+
+Start with the original-program baseline and exact-byte positive controls, then
+run the probe on each supplied protected EXE/DLL. Confirm relevant code references
+separately with REA or instruction inspection; pair candidates alone do not prove
+algorithm recovery. See [the complete workflow and limits](skill/references/numeric-recovery.md).
+Before inclusion, the helper was tested against the retained final NONE and
+MIXED_VM Windows EXEs: five candidates covering all five known values in each,
+complete coverage and unchanged hashes. Extracted ZIP operation is also tested.
+
 ## Agent Request
 
 ```text
@@ -94,6 +116,7 @@ private traces, addresses or decoder, and does not provide one-click devirtualiz
 - [Windows PE audit](skill/references/windows.md)
 - [REA submodule, CLI/MCP interfaces and native security review](skill/references/rea.md)
 - [Virtualized function recovery](skill/references/vm-recovery.md)
+- [Numeric baseline and recovery countertest](skill/references/numeric-recovery.md)
 
 These pages and the allowlisted ZIP come from the same maintained skill sources.
 Source heuristics are not a C++ parser; exact byte matches are not proof of an
