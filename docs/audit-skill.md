@@ -56,6 +56,27 @@ decompilable. Exact byte gates remain independent of Ghidra's defined-string
 inventory. The same record reports native protection costs and observed latency
 tails; it does not claim a vulnerability assessment or resistance to all analysis.
 
+## Virtualized Function Recovery
+
+The skill also investigates equivalent logic recovery for a selected virtualized
+function. Start with the original baseline and bind the protected artifact to
+its own hash/report; a missing original leaves before/after improvement unverified.
+Use static inspection, authorized REA/Frida observations, handler analysis and
+independent compilation as needed. Report static visibility, observed execution,
+partial reconstruction and validated reconstruction separately.
+
+```text
+Use $cpp-leakage-audit to investigate this Windows demo's selected VM function.
+You may execute/instrument the owned demo in isolated processes; preserve its files.
+Establish a baseline, then generate private equivalent C++ if recoverable.
+Compile it independently and compare boundary and disjoint holdout inputs against
+the original function. Report unobserved paths, analyst assistance and unknowns.
+```
+
+The [Windows validation record](windows-validation.md) includes assisted recovery
+of one VM-light sample. The ZIP contains the investigation guide, not that sample's
+private traces, addresses or decoder, and does not provide one-click devirtualization.
+
 ## Canonical Instructions
 
 - [Skill instructions](skill/index.md)
@@ -64,6 +85,7 @@ tails; it does not claim a vulnerability assessment or resistance to all analysi
 - [Audit validation](skill/references/validation.md)
 - [Windows PE audit](skill/references/windows.md)
 - [REA submodule, CLI/MCP interfaces and native security review](skill/references/rea.md)
+- [Virtualized function recovery](skill/references/vm-recovery.md)
 
 These pages and the allowlisted ZIP come from the same maintained skill sources.
 Source heuristics are not a C++ parser; exact byte matches are not proof of an

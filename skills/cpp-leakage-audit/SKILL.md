@@ -1,6 +1,6 @@
 ---
 name: cpp-leakage-audit
-description: Inspect C++ source and ELF/PE releases for information leaks and investigate native vulnerability candidates using optional REA static analysis. Use for original-program baselines, before/after leakage audits, and evidence-backed native security review.
+description: Audit C++ source and ELF/PE releases for information leaks, investigate native vulnerability candidates, and assess virtualized-function recovery with optional REA. Use for original-program baselines, before/after audits, and evidence-backed recovery investigations.
 ---
 
 # C++ Leakage Audit
@@ -8,9 +8,11 @@ description: Inspect C++ source and ELF/PE releases for information leaks and in
 ## Scope and Independent Operation
 
 Audit the authorized source, original binaries, libraries and staged package.
-This skill is read-only toward the target: write only requested private reports.
-Do not rebuild, strip, rewrite files, generate keys or change protection policy
-under an audit-only request. Recommend fixes with evidence; implementation is
+This skill preserves target artifacts and retained analysis. Ordinary audits
+write private reports; an authorized function-recovery task may also create
+private instrumentation, decoders and independently compiled reconstructions.
+Do not rebuild or rewrite the target, strip it, generate keys or change
+protection policy under an audit-only request. Recommend fixes with evidence; implementation is
 a separate authorized task. The optional `cpp-code-protection` skill covers that
 task, but is not required to run this skill.
 
@@ -22,6 +24,9 @@ For decompiler-backed leakage checks or native vulnerability investigation read
 [rea.md](references/rea.md). REA is
 an optional analysis backend; the standalone leakage scanner needs no REA, Node
 or decompiler installation.
+For virtualized-function inspection or recovery, read
+[vm-recovery.md](references/vm-recovery.md). That workflow uses REA when available;
+it does not provide a generic devirtualizer.
 
 ## Establish Evidence
 
@@ -108,5 +113,10 @@ assign CVEs or claim a complete security assessment from imports or strings.
 An allowlist requires a narrow expression and a reason; it must not erase whole
 categories such as Base64-looking strings or system paths.
 Zero corpus matches do not mean no leakage or resistance to reverse engineering.
+For VM work, report transform evidence, static visibility, observed execution
+and reconstructed semantics separately. State whether recovery is unattempted,
+partial or validated for the tested domain, with the exact inputs, mismatches,
+analyst assistance and unknown paths. A readable dispatcher is not recovery;
+successful recovery of one function is not recovery of the whole application.
 If asked to implement protection, establish the authorized change scope and
 switch to a protection workflow rather than silently extending the audit.

@@ -40,6 +40,23 @@ python <skill-directory>/scripts/audit.py --package /staged/release \
 精确字节门禁独立于 Ghidra 的已定义字符串清单；同页也记录保护开销及实测尾部延迟，
 不据此声称完成漏洞评估或能抵抗所有分析。
 
+## 虚拟化函数恢复
+
+skill 也可调查指定函数在虚拟化后是否能恢复等价逻辑。先保存原程序 baseline，
+并将保护产物绑定到其自身的哈希和报告；缺少原程序时，注明无法验证保护前后改善。
+按需进行静态检查、授权范围内的 REA/Frida 观测、处理器分析及独立编译比对。
+报告区分静态可见、运行观测、部分恢复和已验证恢复，不将分派器伪代码当成算法恢复。
+
+```text
+使用 $cpp-leakage-audit 分析这个 Windows demo 的指定虚拟化函数。
+可以在隔离进程中执行和插桩自有 demo，保留原文件。
+先建立 baseline；如能恢复，生成私有等价 C++ 并独立编译，使用边界输入和
+未参与推导的测试输入与原函数比较。报告未覆盖路径、人工辅助及不确定项。
+```
+
+[Windows 验证记录](windows-validation.zh-CN.md)包含一个 VM-light 样本的辅助恢复结果。
+ZIP 包含通用调查指导，不包含该样本的私有 trace、地址或专用解码器，也不提供一键去虚拟化。
+
 ## 规范说明
 
 - [Skill 说明（英文）](skill/index.md)
@@ -48,5 +65,6 @@ python <skill-directory>/scripts/audit.py --package /staged/release \
 - [验证要求（英文）](skill/references/validation.md)
 - [Windows PE 审计（英文）](skill/references/windows.md)
 - [REA 子模块、CLI/MCP 和漏洞调查（英文）](skill/references/rea.md)
+- [虚拟化函数恢复流程（英文）](skill/references/vm-recovery.md)
 
 网站和 ZIP 使用相同的白名单源文件。源码启发式检测不是 C++ 解析器；字节匹配不能证明运行路径，零匹配也不意味着无法逆向。

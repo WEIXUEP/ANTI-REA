@@ -11,6 +11,7 @@ SKILL_FILES = {
         "references/operations.md",
         "references/windows.md",
         "references/rea.md",
+        "references/vm-recovery.md",
         "scripts/audit.py",
         "scripts/rea_audit.py",
         "scripts/requirements.txt",

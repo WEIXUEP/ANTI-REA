@@ -101,51 +101,11 @@ startup and owned child cleanup remain REA's responsibility.
 
 ## Reviewing Virtualized Functions
 
-Treat applied-transform evidence, readable VM implementation and recovered
-original semantics as separate results. Confirm the selected function actually
-received VM before interpreting a decompilation attempt. Locate the function in
-the current release through executable metadata and call sites; record any
-private symbols or maps used as analyst assistance.
-
-Inspect the wrapper, dispatcher, bytecode references and selected handlers.
-Preserve unresolved indirect edges, jump-table warnings and missing procedure
-entries. A successful query with empty callees does not establish a complete
-call graph. Nearby search results do not establish which function contains an
-interior address; check observed body ranges. The bridge's `function` selector
-expects a known procedure entry, not an arbitrary instruction address.
-
-Readable pseudocode or exposed constants are not automatic devirtualization.
-Claim algorithm recovery only after reconstructing the target computation and
-checking independent inputs against an authorized oracle. Source-based runtime
-checks establish correctness of protection, not recovery by REA. State whether
-dynamic tracing, symbolic execution or a custom devirtualizer was actually used;
-a failed static recovery does not establish that recovery is impossible.
-
-If running the owned test artifact is authorized, REA MCP
-`instrument_with_frida` can provide a separate dynamic-assisted investigation.
-This is outside the read-only static CLI bridge. `observe_native_calls` targets
-Mach-O/LLDB; it is not the Windows tracing interface. Verify local Frida support
-and use a bounded, naturally terminating test command. Ephemeral sessions detach
-instrumentation; detachment alone does not establish target exit.
-
-Capture runtime bytecode, actual dispatcher targets and relevant state; inspect
-selected handler/ALU instructions and corroborate them against the artifact.
-Separate observed targets from guessed paths and preserve failed hooks. Require
-an explicit artifact-specific decoder or reviewed reconstruction before claiming
-recovery; observing a VM return value alone is only an oracle.
-
-Frida observations may lack an artifact digest or platform in their Evidence.
-Supplement the selected file's before/after hash, main-module path, platform,
-architecture and script hash. Do not call a file hash full loaded-image
-attestation. Keep scripts, payloads and runtime material private.
-
-Generate equivalent code from recovered operations, compile it independently and
-compare direct original-function calls on boundary and disjoint holdout inputs.
-Preserve unsigned widths and shifts. Report analyst assistance, prior source
-knowledge, enabled VM preset/anti-debug settings and remaining coverage; a small
-VM-light recovery does not establish a universal devirtualizer. Embedded VM
-decryption material is distinct from an application's absent diagnostic private
-key or RTTI naming key.
+Read [vm-recovery.md](vm-recovery.md) for the staged static/dynamic investigation,
+reconstruction checks and evidence record. Use this reference's baseline binding
+and static bridge commands first. The bridge's `function` selector expects a
+known procedure entry, not an arbitrary interior instruction address. Dynamic
+tracing is a separate MCP workflow; it is not an action of `rea_audit.py`.
 
 ## Corroborating Leakage Before and After Protection
 
