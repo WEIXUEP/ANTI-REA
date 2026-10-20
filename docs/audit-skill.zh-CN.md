@@ -33,6 +33,13 @@ python <skill-directory>/scripts/audit.py --package /staged/release \
 
 审计不隐含重编译、strip、生成密钥或安装工具链授权。用户提供修复后的产物时，可用同一语料、顺序和清单比较结果。
 
+## 已验证的 Windows 泄露检查
+
+[原生验证记录](windows-validation.zh-CN.md)包含针对原始及保护 demo 包的真实 REA/Ghidra 查询。
+指定诊断/RTTI 查询有已知泄露正对照，保护后的公开函数仍可反编译。
+精确字节门禁独立于 Ghidra 的已定义字符串清单；同页也记录保护开销及实测尾部延迟，
+不据此声称完成漏洞评估或能抵抗所有分析。
+
 ## 规范说明
 
 - [Skill 说明（英文）](skill/index.md)

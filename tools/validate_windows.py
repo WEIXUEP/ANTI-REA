@@ -9,6 +9,7 @@ from pathlib import Path
 import shutil
 import subprocess
 import sys
+import time
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
@@ -72,11 +73,14 @@ def main(argv=None):
 
     def run(command, cwd=ROOT, expected=0, timeout=300, runtime_env=None):
         command = [str(v) for v in command]
+        started = time.perf_counter()
         result = subprocess.run(command, cwd=cwd, env=runtime_env or env, capture_output=True, timeout=timeout)
+        elapsed = time.perf_counter() - started
         log = f"command-{len(evidence['commands']):03d}.log"
         text = (result.stdout + result.stderr).decode("utf-8", errors="replace")
         (output / log).write_text(text, encoding="utf-8")
-        evidence["commands"].append(dict(argv=command, cwd=str(cwd), exit_code=result.returncode, log=log))
+        evidence["commands"].append(dict(argv=command, cwd=str(cwd), exit_code=result.returncode,
+                                         wall_seconds=elapsed, log=log))
         save()
         require(result.returncode == expected, f"{log}: expected {expected}, got {result.returncode}\n{text[-6000:]}")
         return text

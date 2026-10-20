@@ -47,6 +47,15 @@ An audit does not authorize rebuilding, stripping, generating keys or installing
 toolchains. The skill can recommend fixes and compare a provided rebuilt release
 using the same corpus and inventory, without performing those changes itself.
 
+## Verified Windows Leakage Checks
+
+The [native validation record](windows-validation.md) includes real REA/Ghidra
+queries against original and protected demo packages. Selected diagnostic/RTTI
+queries have positive controls, and a protected public function remains
+decompilable. Exact byte gates remain independent of Ghidra's defined-string
+inventory. The same record reports native protection costs and observed latency
+tails; it does not claim a vulnerability assessment or resistance to all analysis.
+
 ## Canonical Instructions
 
 - [Skill instructions](skill/index.md)

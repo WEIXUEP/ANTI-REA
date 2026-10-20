@@ -92,6 +92,11 @@ build-performance ranking. OS file caches are not flushed.
 
 ## Workloads and Metrics
 
+For native Windows use the accepted-package runner in the
+[Windows guide](windows.md). It records a separate OFF/ON measurement rather than
+reusing the Linux table, and retains slow samples and dispersion. The existing
+Linux three-profile command above is not a substitute for native Windows data.
+
 - `startup`: spawn a fresh process, execute one policy iteration and exit. Process
   wall time includes loader and string-decryption startup overhead.
 - `bench`: execute 500,000 selected policy iterations and report the inner elapsed

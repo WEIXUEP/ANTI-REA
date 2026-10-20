@@ -18,7 +18,8 @@ The bundled `scripts/audit.py` runs with Python 3.10+ outside this repository.
 Optional pyelftools/pefile add structured ELF/PE checks; see
 [operations.md](references/operations.md) for commands, dependencies and limits.
 For Windows artifacts read [windows.md](references/windows.md).
-For native vulnerability investigation read [rea.md](references/rea.md). REA is
+For decompiler-backed leakage checks or native vulnerability investigation read
+[rea.md](references/rea.md). REA is
 an optional analysis backend; the standalone leakage scanner needs no REA, Node
 or decompiler installation.
 

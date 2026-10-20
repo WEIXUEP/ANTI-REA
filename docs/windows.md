@@ -86,6 +86,34 @@ For mixed VM use the same generator and paths with
 protection settings. Never use a Linux archive as a Windows-native toolchain;
 that archive is usable inside WSL, not by native JOM.
 
+## Measure Native Protection Cost
+
+After a successful run of the current validator, measure its accepted Release
+packages without rebuilding or changing them:
+
+```powershell
+python tools/measure_windows.py `
+  --acceptance build/windows-acceptance/<run-id>/result.json `
+  --samples 31 --warmups 5 --out build/windows-cost/<new-run-id>
+```
+
+The tool verifies accepted EXE/DLL hashes before and after measurement, retains
+its runner and raw samples in a new private directory, and alternates profile
+order. Each process exits before the next begins. It checks policy outputs
+against an independent Python reference and checks warning behavior.
+
+Reports separate the initial compile/link observation, EXE/DLL and whole-package
+bytes, process startup, the 500,000-iteration policy loop's inner time, and a
+fresh process emitting one warning. Warning timing includes loading and I/O;
+it is not isolated encryption throughput. Summaries retain median, min/max,
+nearest-rank p95 and population standard deviation. Do not run REA concurrently
+with sampling or discard slow samples. A repeat needs a new output directory.
+
+This compares protection OFF/ON with xollvm `NONE`, using the same Release
+optimization, CRT and `/DEBUG:FULL /OPT:REF /OPT:ICF /INCREMENTAL:NO` flags.
+There is no claim that a separate ELF-style stripped profile exists on PE.
+See [native results](windows-validation.md) for measurements and limitations.
+
 ## MSVC RTTI Contract
 
 Itanium `_ZTS` records are not MSVC RTTI records. The Windows transformer recognizes

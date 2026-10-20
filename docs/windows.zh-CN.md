@@ -50,6 +50,27 @@ cmake --install build/windows-jom
 
 测试时将 libsodium DLL 目录加入 PATH，或按部署策略放在程序旁；不分发整个依赖安装/SDK。mixed VM 增加 `-DANTI_REA_OBFUSCATION=MIXED_VM`，不同配置用独立目录。Linux 工具包仅用于 WSL，不能直接给原生 JOM 用。
 
+## 测量原生保护开销
+
+当前版本验收脚本成功后，直接测量其已验收 Release 包，不重新构建或修改产物：
+
+```powershell
+python tools/measure_windows.py `
+  --acceptance build/windows-acceptance/<run-id>/result.json `
+  --samples 31 --warmups 5 --out build/windows-cost/<new-run-id>
+```
+
+工具在测量前后核对 EXE/DLL 哈希，在新私有目录保留运行脚本及原始样本，交替采样两种配置，
+每次等上一进程退出。策略结果须匹配独立 Python 参考值，警告行为也被检查。
+
+报告分别给出初次编译/链接观测、EXE/DLL 及整包体积、启动进程耗时、500,000 次策略循环内部时间，
+以及新进程输出一次警告的耗时。警告包含加载与 I/O，不是纯加密吞吐量。
+摘要包含中位数、最小/最大值、最近秩 p95 和总体标准差。不要与 REA 分析同时采样，不删除慢样本；重复运行用新目录。
+
+比较使用相同 Release 优化、CRT 及 `/DEBUG:FULL /OPT:REF /OPT:ICF /INCREMENTAL:NO`，
+仅保护 OFF/ON，xollvm 为 `NONE`，不声称 PE 存在单独的 ELF 式 stripped 配置。
+实测与限制见[验证记录](windows-validation.zh-CN.md)。
+
 ## MSVC RTTI 契约
 
 Itanium `_ZTS` 不是 MSVC RTTI。转换器识别 Clang x64 `TypeDescriptor`，修改名称缓冲及数组大小，保留运行字段和引用。不支持的布局明确失败。

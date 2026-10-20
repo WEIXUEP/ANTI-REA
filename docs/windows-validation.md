@@ -150,3 +150,93 @@ unavailable backends, and targets changed or removed during a query. The ZIP
 also runs planning without REA, repository imports or Python site packages.
 The full Python run completed 78 tests (four platform/permission skips); skill
 format validation and the strict MkDocs build also passed.
+
+## Paired Leakage Validation and Protection Cost (2026-10-20)
+
+The current demo was freshly rebuilt and accepted again, using the same LLVM,
+Intel/MSVC environment and libsodium described above. Private acceptance evidence:
+`build/windows-acceptance/20261020T040733401395Z/result.json`.
+Debug/Release OFF/ON each passed all 39 RTTI/exception checks, the original-name
+and package gates, recovery, relocation, stable-key rebuilding and complete
+six-object key rotation. The Release scanner recorded six exact corpus matches
+before protection and zero after, with no unperformed metadata checks.
+
+### REA Leakage Controls
+
+The actual skill bridge used official REA 6.4.0 and Ghidra 12.1.4 on both fresh
+Release packages, binding every query to its own scanner report and artifact
+SHA-256. This extends the earlier unprotected-only review; it is not a mock test.
+
+| Ghidra defined-string query | Original | Protected |
+| --- | ---: | ---: |
+| EXE: `Invalid mesh topology` | 1 | 0 |
+| EXE: `ResonantKernel` (including composite/pointer types) | 6 | 0 |
+| DLL: `ResonantKernel` | 2 | 0 |
+
+The protected DLL's required public `ar_compute` was found at `0x180001230`;
+its eight instructions and nonempty pseudocode were recovered. This is a control
+that analysis still works, and also demonstrates that baseline information
+protection does not conceal ordinary machine-code logic. These counts refer to
+defined string records, not the scanner's exact-corpus occurrence count. Empty
+Ghidra results alone cannot establish byte absence; the independent exact scan
+and all selected original-RTTI checks also passed.
+
+Eight successful static queries, Evidence envelopes and a verification script
+are retained in `build/rea-leakage-validation/20261020T040733401395Z/`.
+The first unavailable-provider attempt was retained, then retried with the
+existing `GHIDRA_INSTALL_DIR` configured. No target execution occurred during
+REA analysis. The installed official backend was used; the pinned submodule's
+complete developer build remains unverified. No new vulnerability is claimed.
+
+### Native Cost Measurements
+
+Machine: Windows 11 build 26200, Ryzen 9 7900X (12 cores/24 threads), balanced
+power plan. Builds used eight jobs, Release `/O2`, the same CRT and
+`/DEBUG:FULL /OPT:REF /OPT:ICF /INCREMENTAL:NO`. Obfuscation was `NONE`;
+these are the costs of diagnostic/location/RTTI information protection, not
+Windows xollvm or VM measurements.
+
+`tools/measure_windows.py` checked accepted artifact hashes and independent
+policy results. A pilot used five warmups and 31 measured samples per workload
+and profile; a separate repeat used ten warmups and 101 samples. Profiles
+alternated order, no REA analysis ran concurrently, and no slow samples were
+discarded. The table below uses the repeat medians; build time is the same
+single initial compile/link observation, excluding configure/tests/install.
+
+| Metric | OFF | ON | Observed change |
+| --- | ---: | ---: | ---: |
+| Initial compile/link (s) | 3.442 | 4.490 | +30.4% (one observation) |
+| EXE + engine DLL (bytes) | 113664 | 100352 | -11.7% |
+| Startup process median (ms) | 7.342 | 8.291 | +0.950 ms / +12.9% |
+| 500,000 policy iterations, inner median (ms) | 2.696 | 2.623 | -2.7%; not a speedup claim |
+| One-warning process median (ms) | 7.178 | 8.493 | +1.315 ms / +18.3% |
+
+Pilot OFF/ON medians were 7.638/8.232 ms for startup, 2.686/2.624 ms for the
+policy loop and 7.173/9.322 ms for the warning process. Neither experiment shows
+a clear policy-loop regression. It does not measure per-cast RTTI cost or
+sustained diagnostic throughput; warning timing includes process loading and I/O.
+
+Tail latency is material and must remain visible. Repeat process-wall values:
+
+| Workload | OFF p95 / max (ms) | ON p95 / max (ms) |
+| --- | ---: | ---: |
+| Startup | 8.449 / 10.505 | 110.318 / 122.676 |
+| Policy benchmark process | 11.719 / 12.495 | 112.516 / 122.782 |
+| One-warning process | 23.442 / 101.629 | 120.372 / 402.091 |
+
+The pilot also had roughly 120 ms protected-process outliers. The cause of the
+tail delays is unresolved; no antivirus/system setting was changed. These data
+do not establish a low-overhead or latency-budget guarantee. Inner policy-loop
+time stayed near 2.6 ms even when whole-process latency was much larger.
+
+The supplied libsodium DLL is 462848 bytes and is imported only by the protected
+EXE. Acceptance stages it in both packages: staged totals are 576534/563222 bytes,
+but that is not a reduction in minimal deployment size. Omitting the unused DLL
+from the baseline would give 113686 bytes including its resource, versus 563222
+for the protected package, excluding shared system CRTs in both cases.
+
+Raw samples, dispersion, acceptance identity and matching runner snapshots are
+private under `build/windows-cost/20261020T040733401395Z/` and the sibling
+`20261020T040733401395Z-repeat/`. CPU time, peak memory, real Palace and Windows
+obfuscation/VM costs were not measured. Portable regressions completed 82 tests,
+with four platform/permission skips.

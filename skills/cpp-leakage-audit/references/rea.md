@@ -99,6 +99,38 @@ unknown edges and provider limitations still determine what can be concluded.
 No subprocess timeout is imposed on top of REA's provider deadlines; Ghidra
 startup and owned child cleanup remain REA's responsibility.
 
+## Corroborating Leakage Before and After Protection
+
+First capture the original scanner baseline and verify known-leaking controls.
+Scan the supplied protected release with the same corpus, inventory and allow
+rules using the scanner's baseline comparison. Keep both reports. For REA queries,
+each binary must bind to the report of its own bytes: a protected binary cannot
+use the original binary's digest as its identity.
+
+```bash
+python <skill>/scripts/rea_audit.py --baseline /private/original.json \
+  --binary /original/app.exe --rea-root /tools/rea \
+  --action search-strings --selector 'Exact sensitive diagnostic' \
+  --out /private/original-string-query
+python <skill>/scripts/rea_audit.py --baseline /private/protected.json \
+  --binary /protected/app.exe --rea-root /tools/rea \
+  --action search-strings --selector 'Exact sensitive diagnostic' \
+  --out /private/protected-string-query
+```
+
+Repeat for selected original RTTI names in the executable and library. Preserve
+positive-control matches and addresses. Search a required public function and
+inspect its actual instructions/pseudocode in the protected library as a control
+that analysis remains usable; obtain its address from that build, not the old one.
+On Windows, set `GHIDRA_INSTALL_DIR` to the existing supported installation and
+use a full JDK; an unset provider is an incomplete check, not a negative match.
+
+Ghidra string searches cover defined string Data, not every byte in the file.
+An empty REA result cannot prove plaintext absence; retain the scanner's exact
+UTF-8/UTF-16 gate and metadata gaps independently. Opaque names still expose type
+structure, and preserved public code can still be decompiled. Report corpus
+removal, remaining analysis visibility and security candidates separately.
+
 ## MCP for Iterative Analysis
 
 An already registered REA MCP server avoids repeating cold imports for each
