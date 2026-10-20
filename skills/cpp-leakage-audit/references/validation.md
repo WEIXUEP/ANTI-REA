@@ -1,99 +1,25 @@
-# Protection Integration Validation
+# Audit Validation
 
-Read this when testing the skill on a new project or validating a new protection
-integration. Keep temporary fixtures outside the target repository when requested.
-Do not replace production workloads with the fixture's performance assumptions.
+Verify the scanner and the scope, not only a successful exit status.
 
-For a downloaded-skill test, extract the allowlisted ZIP to a temporary directory
-and run its scripts from a different working directory without the example's
-`src` or `tools` on `PYTHONPATH`. Exercise audit, key generation, map inventory,
-decoding, environment checks and a trusted workload manifest. This tests actual
-packaging independence rather than only file presence. Test standard-library-only
-commands with optional dependencies unavailable; do not equate a dependency-free
-string scan with a completed structured ELF/PE audit.
+- Establish a known-leaking positive control before interpreting a clean scan.
+  Include selected diagnostics, filenames, developer roots and raw RTTI names.
+- Test exact UTF-8/UTF-16 matches and offsets; verify required public names remain
+  visible where the ABI requires them.
+- Use the original executable, its actual libraries and the complete staged
+  release. Record SHA-256 identity and keep build and installed views separate.
+- With optional metadata unavailable, confirm `--require-metadata` fails native
+  acceptance. Basic string scanning must not count as complete ELF/PE inspection.
+- Exercise private-package and exact-corpus gates. A default zero exit is
+  inventory completion, not a promise of no leakage.
+- Compare provided rebuilt artifacts using the original immutable baseline.
+  Verify corpus/scope changes fail rather than produce an improvement claim.
+- Review candidate paths, required imports, public exceptions and opaque payload
+  context manually. Keep explicit reasons; do not hide whole finding categories.
+- Extract this skill ZIP alone and run `scripts/audit.py --help` and a synthetic
+  package scan from another working directory without repository imports.
 
-## Establish Evidence Before Repairs
-
-- Run the skill's scanner against the original program first. Preserve the JSON
-  and Markdown reports privately, with a SHA-256 inventory and confirmed positive
-  controls. Baseline capture is an observation, not a `--fail-on-deny` clean gate.
-  Missing originals leave the improvement claim unverified.
-- Keep a baseline and a stripped-only release using the same compiler, optimization
-  and inputs. Preserve private debug builds. Record which actual installed files
-  were scanned and measured.
-- These are explicit comparison profiles, not deployment defaults. The default
-  protected release must enable both stripping and baseline information protection;
-  confirm the effective options in a fresh build cache. Do not inherit old OFF
-  settings or let new defaults accidentally protect a baseline control build.
-- Assemble a small, explicit sensitive corpus from real source evidence: selected
-  diagnostics, condition expressions, internal types, functions, globals, source
-  basenames and developer roots. Keep public ABI names on a separate required list.
-- Confirm the scanner detects the known leaks before treating their absence after
-  a repair as meaningful. Check CLI failure status with `--fail-on-deny`; a scanner
-  returning successfully by default only means the inventory ran.
-- Separate confirmed byte matches, source candidates and metadata not inspected.
-  A source diagnostic retained behind a disabled preprocessor branch need not be
-  removed to protect the installed release.
-
-## Verify Selection and Scope
-
-List protected compilation targets and expected types/functions before building.
-Check that all relevant producers and consumers use the same rules and key.
-Adapt example namespace filters and per-function pass validators to the actual
-project. Include local types, templates and compiler-generated closures when they
-expose first-party names; do not rename dependency ABI types indiscriminately.
-
-Inspect maps for expected entries, not just file existence. Zero selected records,
-missing translation units or skipped required passes leave the corresponding
-protection unverified even if compilation succeeds. Keep unrelated types and
-required public exports functional. Report unsupported layouts explicitly.
-
-## Test Semantics and Recovery
-
-- Exercise normal computation with an independent reference where practical.
-  Include concurrency if the target uses it; do not infer thread safety from a
-  single-threaded example.
-- Check both passing and failing assertion conditions for single evaluation.
-  Preserve warning routing, exception exit status, typed exception matching and
-  abort behavior. Run intentional fatal tests only in isolated test processes;
-  prevent their core dumps from leaving sensitive test data unintentionally.
-- For RTTI, check cross-library downcasts, sibling casts when applicable, type
-  equality, inheritance and exceptions, not only printed `typeid().name()`.
-  On Windows use the [native acceptance contract](windows.md): independent
-  EXE/DLL descriptors, hashes, ordering, failure casts, rethrows, exception_ptr
-  and pointer exception conversions under both Debug and Release CRT settings.
-- For sealed diagnostics, recover both template and dynamic fields, resolve the
-  matching source map, and reject wrong keys, damaged payloads and mismatched
-  release maps. Repeated logical sites need unambiguous location handling.
-- Check resource lookup and execution after copying the entire installed package
-  to a new location. Inventory nonbinary assets too: aliases do not encrypt their
-  contents. Private keys, IR, maps and debug files must stay outside that package.
-
-## Use Fresh Artifacts and Interpret Findings
-
-Use a clean or unique staging directory, and copy the release produced by this
-run for relocation tests. Do not validate an old successful release while scanning
-new build outputs. Keep artifact paths or hashes in the evidence. Repeat the same
-corpus and public-name checks after repairs.
-Use `--baseline` with the original report to compare findings independently of
-byte offsets. Keep artifact roles and corpus unchanged. A renamed resource or
-new package file requires an explicit inventory review, rather than quietly
-dropping it from the post-repair scan. Scan full packages separately to catch
-private PDBs, IR, maps and keys; scanning EXE/DLL alone is insufficient.
-
-Review candidate paths in context. Sealed payloads can contain slash-separated
-Base64 substrings; compiler URLs, loader paths and relative runtime paths may also
-be intentional. Record a reason for each accepted exposure without hiding broad
-classes of findings. Do not claim zero paths because the selected source-root
-substring disappeared.
-
-Measure build time, size, startup and representative workloads separately. Retain
-sample ranges or dispersion and distinguish one clean-build observation from a
-repeated statistical result. If no application performance budget exists, expensive
-per-function choices remain pending; this is different from failed protection or
-silently downgraded settings.
-
-Conclude with resolved findings, intentional exposures, pending decisions,
-unperformed checks and limits. Identify any project-specific adapter and manual
-judgment used. A Linux guided trial does not establish Windows support or universal
-automatic remediation.
+Audit-only validation does not require source changes, key generation or a
+protected rebuild. If runtime tests are authorized, use isolated processes and
+report untested failure scenarios. A clean corpus scan is not a disassembler,
+general security assessment or guarantee against reverse engineering.

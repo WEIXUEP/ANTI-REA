@@ -42,6 +42,7 @@ hooks:
 
 watch:
   - skills/cpp-leakage-audit
+  - skills/cpp-code-protection
   - LICENSE
 
 markdown_extensions:
@@ -75,16 +76,23 @@ nav:
       - Build and Integration: integration.md
       - xollvm and Function Selection: xollvm.md
       - Windows: windows.md
-  - Audit Skill:
+  - Leakage Detection Skill:
       - Using the Skill: audit-skill.md
       - Skill Instructions: skill/index.md
       - Independent Operations: skill/references/operations.md
-      - Protection Integration: skill/references/integration.md
-      - Remediation Policy: skill/references/remediation.md
-      - Validation Guide: skill/references/validation.md
-      - Recovery Tool Design: skill/references/recovery-tools.md
-      - Key Generation and Lifecycle: skill/references/key-management.md
-      - Windows Validation: skill/references/windows.md
+      - Finding Interpretation: skill/references/interpretation.md
+      - Audit Validation: skill/references/validation.md
+      - Windows Audit: skill/references/windows.md
+  - Code Protection Skill:
+      - Using the Skill: using-protection-skill.md
+      - Skill Instructions: protection-skill/index.md
+      - Independent Operations: protection-skill/references/operations.md
+      - Protection Integration: protection-skill/references/integration.md
+      - Remediation Policy: protection-skill/references/remediation.md
+      - Validation Guide: protection-skill/references/validation.md
+      - Recovery Tool Design: protection-skill/references/recovery-tools.md
+      - Key Generation and Lifecycle: protection-skill/references/key-management.md
+      - Windows Validation: protection-skill/references/windows.md
   - Evidence:
       - Windows Native Results: windows-validation.md
       - Measurement Tools: measurement.md

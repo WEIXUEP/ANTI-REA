@@ -10,7 +10,7 @@ opaque RTTI names, release-symbol hygiene, and code obfuscation.
 ## Documentation Website
 
 The project includes a searchable MkDocs Material site with grouped technical
-guides, measured results and a downloadable audit skill. See the
+guides, measured results and two independently downloadable skills. See the
 [documentation home](docs/index.md) or [GitHub Pages setup](docs/github-pages.md).
 
 **Online documentation:** <https://weixuep.github.io/ANTI-REA/>
@@ -33,7 +33,7 @@ GitHub metadata; forks can override it with `ANTI_REA_SITE_URL`.
 - Symbol stripping versus runtime strings: stripping alone does not remove both.
 - Relocatable, aliased resource paths and private build artifacts.
 - xollvm light, medium, heavy and mixed-function VM configurations.
-- A portable source/binary auditor and an installable audit-and-repair skill.
+- A portable source/binary auditor and separate detection/protection skills.
 
 The example is a small generic computational engine, not a real solver. Its
 integer workload makes exact correctness comparisons easy and excludes numerical
@@ -145,19 +145,22 @@ python tools/anti_rea.py audit --binary /path/to/program \
   --deny 'Confidential error text' --fail-on-deny --out build/target-audit
 ```
 
-Use the self-contained [cpp-leakage-audit skill](skills/cpp-leakage-audit/SKILL.md)
-for an evidence-based audit and authorized repairs. Copy its directory into your
-agent's skill directory; it has no dependency on this repository's Python package.
-The project does not install the skill globally by itself.
+Choose one or both independently installable skills:
 
-The downloaded skill includes independent Python tools for environment checks,
-source/binary/package audits, key generation, offline diagnostic/RTTI recovery
-and arbitrary workload measurements. Read its
-[operations guide](skills/cpp-leakage-audit/references/operations.md) for commands,
-optional dependencies and supported formats. C++ protection changes and optional
-GUI work remain agent-guided rather than a universal automatic rewrite.
+- [cpp-leakage-audit](skills/cpp-leakage-audit/SKILL.md): read-only source,
+  binary and package detection, baseline evidence and mitigation recommendations.
+  Includes the standalone scanner, not key generation or target changes.
+- [cpp-code-protection](skills/cpp-code-protection/SKILL.md): authorized protection
+  integration, key lifecycle, offline recovery, optional GUI design and workload
+  measurement. Includes independent Python tools, not a scanner or universal rewriter.
 
-For authorized protection work, the skill defaults to a **stripped and
+Copy the chosen directory into your agent's skill directory. Neither requires
+this repository's Python package or the other skill. The project does not
+install them globally. The website provides separate ZIP downloads and
+operations guides for [detection](docs/audit-skill.md) and
+[protection](docs/using-protection-skill.md).
+
+For authorized protection work, the protection skill defaults to a **stripped and
 information-protected release**, not maximum obfuscation. It adapts diagnostic,
 path and RTTI protections to the target, then selects function-level obfuscation or VM by implementation value,
 call frequency and performance requirements. Hot paths remain unchanged unless
@@ -180,14 +183,15 @@ its comparison profiles do not prescribe a production protection policy.
 | [Measurements](docs/measurement.md) | Comparison methodology and interpretation |
 | [Results](docs/comparison.md) | Sanitized measured results |
 | [Remaining exposure](docs/remaining-exposure.md) | What an analyst can still identify and why |
-| [Audit skill](docs/audit-skill.md) | Use and download the audit-and-repair skill |
+| [Leakage detection skill](docs/audit-skill.md) | Read-only evidence collection and recommendations |
+| [Code protection skill](docs/using-protection-skill.md) | Protection integration, keys and offline recovery |
 | [GitHub Pages](docs/github-pages.md) | Preview and deploy the documentation website |
 
 ## Layout and License
 
 `examples/` contains C++, `tools/` contains the Python entry point, `src/anti_rea/`
-contains implementation, and `skills/` contains the independent audit/recovery
-toolkit and integration guidance. Generated
+contains implementation, and `skills/` contains independent detection and
+protection packages. Generated
 headers, private LLVM IR, maps and measurements stay in ignored build directories.
 
 Original example code is MIT licensed. xollvm is an external project under

@@ -5,7 +5,7 @@ on:
     branches: [main]
     paths:
       - 'docs/**'
-      - 'skills/cpp-leakage-audit/**'
+      - 'skills/**'
       - 'src/anti_rea/site_hook.py'
       - 'tests/test_docs.py'
       - 'mkdocs.yml'
@@ -15,7 +15,7 @@ on:
   pull_request:
     paths:
       - 'docs/**'
-      - 'skills/cpp-leakage-audit/**'
+      - 'skills/**'
       - 'src/anti_rea/site_hook.py'
       - 'tests/test_docs.py'
       - 'mkdocs.yml'

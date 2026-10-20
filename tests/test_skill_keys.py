@@ -10,7 +10,7 @@ import tempfile
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
-SCRIPT = ROOT / "skills/cpp-leakage-audit/scripts/generate_keys.py"
+SCRIPT = ROOT / "skills/cpp-code-protection/scripts/generate_keys.py"
 sys.path.insert(0, str(ROOT / "src"))
 from anti_rea.crypto import key_id, load_keys, open_sealed, seal
 

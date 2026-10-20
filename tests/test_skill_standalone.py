@@ -27,9 +27,12 @@ class StandaloneSkillTests(unittest.TestCase):
         self.temporary = tempfile.TemporaryDirectory()
         self.addCleanup(self.temporary.cleanup)
         self.root = Path(self.temporary.name)
-        with ZipFile(BytesIO(site_hook.skill_archive(site_hook.skill_contents(ROOT)))) as archive:
-            archive.extractall(self.root)
-        self.scripts = self.root / "cpp-leakage-audit/scripts"
+        # Keep the archives in separate environments: neither can import its sibling.
+        for skill in site_hook.SKILL_FILES:
+            with ZipFile(BytesIO(site_hook.skill_archive(site_hook.skill_contents(ROOT, skill), skill))) as archive:
+                archive.extractall(self.root / skill)
+        self.audit_scripts = self.root / "cpp-leakage-audit/cpp-leakage-audit/scripts"
+        self.scripts = self.root / "cpp-code-protection/cpp-code-protection/scripts"
         self.cwd = self.root / "unrelated-cwd"
         self.cwd.mkdir()
         self.environment = dict(os.environ)
@@ -39,7 +42,8 @@ class StandaloneSkillTests(unittest.TestCase):
         command = [sys.executable]
         if no_site:
             command.append("-S")
-        return subprocess.run([*command, str(self.scripts / name), *map(str, arguments)],
+        scripts = self.audit_scripts if name == "audit.py" else self.scripts
+        return subprocess.run([*command, str(scripts / name), *map(str, arguments)],
                               cwd=self.cwd, env=self.environment, input=stdin,
                               capture_output=True, text=True, timeout=30)
 

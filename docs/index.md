@@ -19,6 +19,7 @@ and compare the results using reproducible tools.
 | Recover an encrypted warning | [Diagnostics and recovery](diagnostics.md) |
 | Compare baseline, stripped and protected releases | [Measurement tools](measurement.md) |
 | Audit another C++ project | [Using the audit skill](audit-skill.md) |
+| Implement protection, keys or recovery tools | [Using the code protection skill](using-protection-skill.md) |
 | Publish this documentation | [GitHub Pages setup](github-pages.md) |
 
 ## Default Policy

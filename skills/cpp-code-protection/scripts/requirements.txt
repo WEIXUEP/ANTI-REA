@@ -1,0 +1,2 @@
+# Crypto for key generation and sealed-event recovery; other commands use stdlib.
+PyNaCl>=1.5,<2

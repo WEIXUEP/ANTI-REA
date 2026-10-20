@@ -1,32 +1,44 @@
-"""Publish canonical skill instructions and an explicitly allowlisted download."""
+"""Publish two independent skills using explicit public-file allowlists."""
 from io import BytesIO
 from pathlib import Path
 from zipfile import ZIP_DEFLATED, ZipFile, ZipInfo
 
-SKILL_FILES = (
-    "SKILL.md",
-    "references/remediation.md",
-    "references/validation.md",
-    "references/recovery-tools.md",
-    "references/key-management.md",
-    "references/operations.md",
-    "references/integration.md",
-    "references/windows.md",
-    "scripts/audit.py",
-    "scripts/generate_keys.py",
-    "scripts/decode.py",
-    "scripts/_recovery.py",
-    "scripts/doctor.py",
-    "scripts/measure.py",
-    "scripts/requirements.txt",
-    "agents/openai.yaml",
-)
+SKILL_FILES = {
+    "cpp-leakage-audit": (
+        "SKILL.md",
+        "references/interpretation.md",
+        "references/validation.md",
+        "references/operations.md",
+        "references/windows.md",
+        "scripts/audit.py",
+        "scripts/requirements.txt",
+        "agents/openai.yaml",
+    ),
+    "cpp-code-protection": (
+        "SKILL.md",
+        "references/remediation.md",
+        "references/validation.md",
+        "references/recovery-tools.md",
+        "references/key-management.md",
+        "references/operations.md",
+        "references/integration.md",
+        "references/windows.md",
+        "scripts/generate_keys.py",
+        "scripts/decode.py",
+        "scripts/_recovery.py",
+        "scripts/doctor.py",
+        "scripts/measure.py",
+        "scripts/requirements.txt",
+        "agents/openai.yaml",
+    ),
+}
+SKILL_ROUTES = {"cpp-leakage-audit": "skill", "cpp-code-protection": "protection-skill"}
 
 
-def skill_contents(root):
-    directory = Path(root) / "skills/cpp-leakage-audit"
+def skill_contents(root, skill="cpp-leakage-audit"):
+    directory = Path(root) / "skills" / skill
     result = {}
-    for name in SKILL_FILES:
+    for name in SKILL_FILES[skill]:
         source = directory / name
         if source.is_symlink() or not source.resolve().is_relative_to(directory.resolve()):
             raise ValueError("Refusing an external skill publication source: " + name)
@@ -38,11 +50,13 @@ def skill_contents(root):
     return result
 
 
-def skill_archive(contents):
+def skill_archive(contents, skill="cpp-leakage-audit"):
+    if skill not in SKILL_FILES:
+        raise ValueError("Unknown public skill: " + skill)
     output = BytesIO()
     with ZipFile(output, "w", compression=ZIP_DEFLATED) as archive:
         for name, data in sorted(contents.items()):
-            entry = ZipInfo("cpp-leakage-audit/" + name, date_time=(2026, 1, 1, 0, 0, 0))
+            entry = ZipInfo(skill + "/" + name, date_time=(2026, 1, 1, 0, 0, 0))
             entry.compress_type = ZIP_DEFLATED
             entry.external_attr = 0o100644 << 16
             archive.writestr(entry, data)
@@ -53,17 +67,13 @@ def on_files(files, config):
     from mkdocs.structure.files import File
 
     root = Path(config.config_file_path).parent
-    contents = skill_contents(root)
-    for source, destination in (
-        ("SKILL.md", "skill/index.md"),
-        ("references/remediation.md", "skill/references/remediation.md"),
-        ("references/validation.md", "skill/references/validation.md"),
-        ("references/recovery-tools.md", "skill/references/recovery-tools.md"),
-        ("references/key-management.md", "skill/references/key-management.md"),
-        ("references/operations.md", "skill/references/operations.md"),
-        ("references/integration.md", "skill/references/integration.md"),
-        ("references/windows.md", "skill/references/windows.md"),
-    ):
-        files.append(File.generated(config, destination, content=contents[source].decode("utf-8")))
-    files.append(File.generated(config, "downloads/cpp-leakage-audit.zip", content=skill_archive(contents)))
+    for skill, route in SKILL_ROUTES.items():
+        contents = skill_contents(root, skill)
+        for source in SKILL_FILES[skill]:
+            if not source.endswith(".md"):
+                continue
+            destination = route + "/" + ("index.md" if source == "SKILL.md" else source)
+            files.append(File.generated(config, destination, content=contents[source].decode("utf-8")))
+        files.append(File.generated(config, "downloads/" + skill + ".zip",
+                                    content=skill_archive(contents, skill)))
     return files
