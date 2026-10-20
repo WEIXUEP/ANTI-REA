@@ -441,3 +441,122 @@ that registration path, preserving Ghidra as default. Reconnect REA to select
 `open_binary.provider_id: "ida"`. The original configuration was backed up.
 Private logs, failed attempts and final checks are retained in
 `build/ida-integration/20261020-r001/`.
+
+## Ghidra vs IDA 9.1 Through REA (2026-10-20)
+
+**In this configuration, IDA produced the first results faster with lower sampled
+memory, while Ghidra answered repeated in-session queries faster and exposed more
+structured analysis through REA. Keep Ghidra as the default; use IDA for a second
+opinion or a quick first inspection.** Measurements cover each complete REA path,
+including adapters, process communication and Evidence serialization.
+
+### Targets and Method
+
+The host was Windows 11 Pro build 26200, Ryzen 9 7900X (12 cores / 24 threads),
+with 31.1 GiB visible RAM. Both paths used REA 6.4.0 and Node 24.19.0. Ghidra
+12.1.4 / JDK 24.0.1 was compared with the IDA 9.1 / Hex-Rays headless supervisor
+configuration above. Neither engines nor targets were modified.
+
+The retained protected Release package was analyzed without source, PDB, IR or
+maps. Targets were never executed.
+
+| Target | Bytes | Queried function | Known reference source |
+| --- | ---: | --- | --- |
+| `engine.dll` | 16384 | `ar_compute`, `0x180001230` | Export-table slot `0x180004168` |
+| `anti-rea-demo.exe` | 361472 | VM wrapper `0x140008e50` | Main call site `0x1400014ea` |
+
+DLL SHA-256: `82b55aab4fab558c45fc5adb85dc4a675f53db70544a78e766cec0cf23629f23`.
+EXE SHA-256: `28e69edcd5fe3e231a9479fa56f78a18cc12417ec21d2a0b7fc51f480ad1611b`.
+The positive string oracle, `Unknown exception`, was independently confirmed in
+each PE's raw bytes.
+
+Each target/backend pair used two fresh REA processes and analysis workspaces.
+Round one ran Ghidra then IDA; round two reversed that order. A task sequentially
+requested `procedure_pseudo_code`, literal `search_strings`, and `xrefs`.
+First-task timing starts before MCP connection and includes the full tool
+catalog, artifact opening and the first three queries. Each session then repeated
+the identical task five times. Repeated-query measurements include cache effects
+and do not represent navigation to previously unqueried functions. Ghidra's main
+startup cost appeared in the first analysis query, so `open_binary` timing alone
+would be misleading.
+
+### Time and Resources
+
+First-task values are means of two fresh-process measurements, with ranges in
+parentheses. Repeated-task values are medians of ten measurements. Each task
+contains all three queries, rather than one tool call.
+
+| Target / backend | First task (s) | Repeated task (ms) | Sampled process-family peak RSS (MiB, range) |
+| --- | ---: | ---: | ---: |
+| DLL / Ghidra | 24.396 (23.981–24.811) | 11.192 | 1367.1–1459.3 |
+| DLL / IDA | 5.652 (5.476–5.829) | 361.154 | 1074.5–1075.3 |
+| VM EXE / Ghidra | 32.860 (28.418–37.303) | 14.591 | 1519.3–2092.9 |
+| VM EXE / IDA | 7.184 (7.065–7.302) | 437.641 | 1074.2–1077.5 |
+
+IDA's first task was approximately 4.3–4.6 times faster; Ghidra's repeated task
+was approximately 30–32 times faster. These small-sample results include the
+current bridge implementations and do not establish fixed engine speed ratios
+for arbitrary binaries. Complete process lifetimes also included five repeated
+tasks, capability discovery and close. Sampled cumulative CPU lower bounds were
+32.484–45.375 s Ghidra / 7.453–7.734 s IDA for the DLL, and 50.391–71.109 s /
+9.641–9.719 s for the VM EXE. Multithreaded CPU time can exceed wall time.
+
+psutil 7.2.2 sampled the benchmark Node process and recursive descendants every
+100 ms. RSS is a simultaneous family peak; CPU sums observed process cumulative
+values. Short-lived processes and exit tails can be missed. The sampler itself
+is excluded. Other host activity was not isolated, CPU affinity was not set and
+OS file caches were not flushed: first-task measurements mean fresh processes
+and analysis workspaces. Only two small demo files were tested, without
+confidence intervals, production Palace or large-project measurements.
+
+Complete serialized MCP responses for the first three queries were 25125 bytes
+Ghidra / 37797 bytes IDA for the DLL, and 31801 / 76548 bytes for the VM EXE.
+The full tool catalog was 2537079 bytes in both cases. These Evidence-bearing
+byte counts are not model token counts or costs; pseudocode length is not a
+correctness score.
+
+### Capabilities and Output
+
+| Aspect | Ghidra through current REA | IDA 9.1 through current REA |
+| --- | --- | --- |
+| Functions, strings, pseudocode, assembly, instructions and address xrefs | Available; known matches checked here | Available; known matches checked here |
+| Complete body ranges, CFG and typed references | Structured interfaces provided | Not exposed by this adapter; empty facets mean unknown |
+| Native p-code, value flow and indirect-call investigation | Related interfaces available; not every indirect target resolves | Required capabilities absent from this adapter |
+| Direct callers | Dedicated interface | Unavailable in this modern headless profile; address xrefs alone do not prove call edges |
+| Deployment | Free/open source; JDK and matching Windows native addon required | Tested with licensed IDA Pro / Hex-Rays and a Python bridge |
+
+Capability differences follow actual `binary_session` declarations and adapter
+documentation, not a claim that every advanced interface was exercised here.
+The adapter exposes only part of IDA's GUI/plugin capabilities; missing adapter
+facets do not establish missing engine capabilities.
+
+Both decompilers displayed the DLL's folded LCG loop, decrementing a counter
+from 4096 by eight. Both VM wrappers retained `0x215a827999`, `7` and the
+interpreter call. Hex-Rays combined some clearing into `memset` here; Ghidra
+showed more individual local assignments. Function prototypes and local types
+remain inferred. Dispatcher/handler recovery was not run in this comparison,
+so it establishes neither a devirtualization success-rate comparison nor
+automatic algorithm recovery by IDA. The earlier VM recovery still required
+REA/Frida, analyst interpretation and an artifact-specific decoder.
+
+### Checks and Recommendation
+
+All eight independent sessions and 48 query tasks passed: nonempty pseudocode,
+known string/xref hits, matching provider and target SHA-256 in analysis
+Evidence, unchanged target hashes and successful close requests. The four
+recorded REA entry/adapter/native-manifest fingerprints matched before/after
+each run and across all eight runs. These three-query positive controls do not
+resolve the VM full verifier's assembly text-parity failure described above.
+
+Use Ghidra for repeated skill queries and value-flow investigation; explicitly
+select IDA for fast first inspection or a second decompiler opinion. Establish
+the original artifact's leakage baseline first and bind comparisons to matching
+hashes and addresses. Compare semantics and evidence across engines, rather
+than requiring identical pseudocode. Fresh REA MCP processes loaded the
+configuration for this benchmark; it does not establish that the existing chat
+server reconnected. Direct IDA selection in chat still requires that service to
+reload the registration configuration.
+
+Raw responses, stderr, per-run timing/resources, runner snapshots and
+`summary.json` remain private in `build/backend-comparison/20261020-r001/`,
+excluded from documentation and skill ZIPs.
