@@ -45,7 +45,8 @@ class WorkloadBudgetTests(unittest.TestCase):
                 return end
             return elapsed
 
-        with patch.object(measurement.subprocess, "run", side_effect=execute), \
+        with patch.object(measurement.platform, "platform", return_value="test-host"), \
+                patch.object(measurement.subprocess, "run", side_effect=execute), \
                 patch.object(measurement.time, "perf_counter", side_effect=timer):
             result = measurement.measure(self.config, self.root, samples=3, warmups=1)
         return result, calls
