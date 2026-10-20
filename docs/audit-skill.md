@@ -1,5 +1,7 @@
 # Leakage Detection Skill
 
+English | [简体中文](audit-skill.zh-CN.md)
+
 `cpp-leakage-audit` is a self-contained, read-only source and native-release
 auditor. It finds exposed diagnostics, conditions, paths, names, RTTI and private
 package artifacts, and reports evidence-backed recommendations.

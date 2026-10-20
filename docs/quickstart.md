@@ -1,5 +1,7 @@
 # Quickstart
 
+English | [简体中文](quickstart.zh-CN.md)
+
 Run commands from the checked-out repository root. The example is a small
 computational engine, not a protection SDK that automatically rewrites another
 application.

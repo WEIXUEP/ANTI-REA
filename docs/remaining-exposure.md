@@ -1,5 +1,7 @@
 # What Remains Discoverable
 
+English | [简体中文](remaining-exposure.zh-CN.md)
+
 The protected release is deliberately not a featureless opaque file. This page
 explains the residual inventory observed in the Linux measurement, and what a
 zero sensitive-corpus count actually means. Exact counts and timings are in

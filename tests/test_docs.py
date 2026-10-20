@@ -16,6 +16,17 @@ spec.loader.exec_module(site_hook)
 
 
 class PublicationTests(unittest.TestCase):
+    def test_public_documentation_has_linked_chinese_versions(self):
+        originals = [ROOT / "README.md", *sorted((ROOT / "docs").rglob("*.md"))]
+        for original in originals:
+            if original.name.endswith(".zh-CN.md"):
+                continue
+            with self.subTest(document=original.relative_to(ROOT)):
+                translated = original.with_suffix(".zh-CN.md")
+                self.assertTrue(translated.is_file(), translated)
+                self.assertIn("](" + translated.name + ")", original.read_text(encoding="utf-8"))
+                self.assertIn("](" + original.name + ")", translated.read_text(encoding="utf-8"))
+
     def test_downloaded_scanner_runs_without_repository_imports(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)

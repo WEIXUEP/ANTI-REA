@@ -1,5 +1,7 @@
 # Windows x64: clang-cl, JOM and Release Auditing
 
+English | [简体中文](windows.zh-CN.md)
+
 ## Status
 
 Windows integration is provided, but a successful Linux run is not Windows

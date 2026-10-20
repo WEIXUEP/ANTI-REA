@@ -1,5 +1,7 @@
 # Native Windows Demo Validation
 
+English | [简体中文](windows-validation.zh-CN.md)
+
 Measured on 2026-10-16 (Asia/Shanghai), using this repository's demo rather than
 Palace or a previous standalone RTTI implementation. The complete private run is
 `build/windows-acceptance/20261016T001110774585Z/result.json`. Only this sanitized

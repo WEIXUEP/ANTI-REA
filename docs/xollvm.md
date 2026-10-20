@@ -1,5 +1,7 @@
 # xollvm Integration and Strength Levels
 
+English | [简体中文](xollvm.zh-CN.md)
+
 External project: <https://github.com/und3ath/xollvm>
 
 The integration targets **v0.11.1**, commit
@@ -47,8 +49,9 @@ really came from the expected source commit. Record the supplied archive digest,
 compiler version, opt version and independently verified upstream provenance.
 
 Minimal toolchain distributions may omit `llvm-cxxfilt`; Linux can use GNU
-`c++filt` for RTTI selection. Windows requires `llvm-undname` on the toolchain
-directory or PATH. Demanglers interpret names, not LLVM IR, and do not need the
+`c++filt` for RTTI selection. Windows can use `llvm-undname` in the toolchain
+directory or PATH, with the native DbgHelp fallback when it is unavailable.
+Demanglers interpret names, not LLVM IR, and do not need the
 same LLVM major as opt.
 
 ## Function Selection

@@ -1,5 +1,7 @@
 # Leakage Scenarios and Mitigations
 
+English | [简体中文](scenarios.zh-CN.md)
+
 Use the baseline and protected presets to build the same sources. Run commands
 from the repository root. Every scenario is an inspection exercise rather than a
 claim that the entire program has become unreadable.

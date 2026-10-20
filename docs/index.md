@@ -1,5 +1,7 @@
 # ANTI-REA
 
+English | [简体中文](index.zh-CN.md)
+
 Technical documentation for a runnable C++ information-leakage laboratory.
 Build the example, inspect its release artifacts, apply targeted protections,
 and compare the results using reproducible tools.

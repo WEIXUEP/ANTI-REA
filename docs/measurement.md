@@ -1,5 +1,7 @@
 # Measurement Method
 
+English | [简体中文](measurement.zh-CN.md)
+
 ## Reproduce
 
 ### Three-Release Tool
@@ -72,6 +74,10 @@ python tools/anti_rea.py compare \
 Add `--publish docs/comparison` to generate a public Markdown summary and compact
 JSON without raw audit findings. Full inventories and command logs remain in the
 ignored build directory. Review public outputs before release.
+
+Publishing regenerates the English summary. When replacing `docs/comparison.md`,
+restore its language link and update `docs/comparison.zh-CN.md` from the same run;
+do not combine fresh measurements with an older translation.
 
 The matrix contains baseline, stripped-only, protected-only, light, medium, heavy
 and mixed VM. Use `--presets baseline stripped protected` for a smaller run.

@@ -1,5 +1,7 @@
 # Threat Model
 
+English | [简体中文](threat-model.zh-CN.md)
+
 ## Objective
 
 Reduce the information available through ordinary native-binary string searches,

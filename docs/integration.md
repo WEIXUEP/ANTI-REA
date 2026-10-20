@@ -1,5 +1,7 @@
 # Build Architecture and Integration
 
+English | [简体中文](integration.zh-CN.md)
+
 ## Ownership Boundaries
 
 The project is intentionally standalone. CMake owns target configuration and
@@ -83,7 +85,7 @@ so changing a compiler does not silently reuse another compiler's CMake cache.
 It always passes an explicit installation prefix. It never installs demo programs
 into a system directory.
 
-Publish source, English docs, sanitized results and explicitly public demo keys.
+Publish source, English and Chinese docs, sanitized results and explicitly public demo keys.
 Keep `.private`, build directories, intermediate LLVM IR, raw audit logs and PDBs
 out of Git and release packages. A scan report can itself reveal source paths or
 symbols; review it before publishing. Git ignore rules are a convenience, not an

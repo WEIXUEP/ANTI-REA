@@ -1,5 +1,7 @@
 # Publish Documentation on GitHub Pages
 
+English | [简体中文](github-pages.zh-CN.md)
+
 The repository includes a MkDocs Material site and a GitHub Actions workflow.
 No C++ compiler, libsodium or xollvm installation is required to build the site.
 

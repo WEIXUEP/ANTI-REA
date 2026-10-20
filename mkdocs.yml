@@ -35,7 +35,10 @@ theme:
     - toc.follow
 
 plugins:
-  - search
+  - search:
+      lang:
+        - en
+        - zh
 
 hooks:
   - src/anti_rea/site_hook.py
@@ -66,6 +69,22 @@ validation:
     unrecognized_links: warn
 
 nav:
+  - 简体中文:
+      - 文档首页: index.zh-CN.md
+      - 快速开始: quickstart.zh-CN.md
+      - 威胁模型: threat-model.zh-CN.md
+      - 泄露场景: scenarios.zh-CN.md
+      - 诊断与恢复: diagnostics.zh-CN.md
+      - 构建与集成: integration.zh-CN.md
+      - xollvm 与函数选择: xollvm.zh-CN.md
+      - Windows 构建: windows.zh-CN.md
+      - 检测 Skill 使用指南: audit-skill.zh-CN.md
+      - 保护 Skill 使用指南: using-protection-skill.zh-CN.md
+      - Windows 验证记录: windows-validation.zh-CN.md
+      - 测量方法: measurement.zh-CN.md
+      - 实测结果: comparison.zh-CN.md
+      - 剩余暴露: remaining-exposure.zh-CN.md
+      - GitHub Pages 发布: github-pages.zh-CN.md
   - Home: index.md
   - Getting Started:
       - Quickstart: quickstart.md

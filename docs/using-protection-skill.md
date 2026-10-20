@@ -1,5 +1,7 @@
 # Code Protection Skill
 
+English | [简体中文](using-protection-skill.zh-CN.md)
+
 `cpp-code-protection` guides scoped C++ protection implementation, key lifecycle,
 offline recovery and workload measurements. It is separate from the read-only
 [leakage detection skill](audit-skill.md) and does not bundle a scanner.

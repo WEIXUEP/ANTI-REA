@@ -1,5 +1,7 @@
 # ANTI-REA
 
+English | [简体中文](README.zh-CN.md)
+
 A reproducible C++ information-leakage laboratory: observe what a native binary
 reveals, apply narrowly scoped protections, and measure what actually changes.
 

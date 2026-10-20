@@ -1,5 +1,7 @@
 # Diagnostic Confidentiality and Recovery
 
+English | [简体中文](diagnostics.zh-CN.md)
+
 ## Data Flow
 
 ```text
