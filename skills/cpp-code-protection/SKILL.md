@@ -51,6 +51,14 @@ unknown-frequency functions unchanged until justified. Record exact targets,
 exclusions, required passes and applied/skipped results; compilation success
 alone does not prove a transform ran. Do not install xollvm without authorization.
 
+For ordinary C++ builds using xollvm directly, require explicit opt-in with
+`-mllvm -enable-obfuscation` on each selected compilation target; selecting an
+xollvm compiler or adding annotations alone does not enable its automatic
+obfuscation pipeline. Keep this switch OFF by default. If a launcher already
+invokes `opt -passes=obfuscation,verify`, use that single explicit invocation
+instead of also adding the frontend switch. See the CMake example in
+[integration.md](references/integration.md).
+
 ## Implement Incrementally
 
 Read [integration.md](references/integration.md) before editing. Prefer dedicated

@@ -135,6 +135,48 @@ use a supported static-extension clang-cl/opt pair rather than assume plugin
 loading works. Consult the pinned tool's actual annotation/pass/report contract
 before applying flags; do not copy another version's syntax blindly.
 
+### Explicit Enablement for Ordinary C++ Builds
+
+When compiling ordinary C++ directly with the supported xollvm Clang toolchain,
+require `-mllvm -enable-obfuscation` to opt into the compiler's automatic
+obfuscation pipeline. Without that explicit enablement, do not claim the
+pipeline ran merely because xollvm was selected or functions have annotations.
+Use a default-OFF CMake option and apply the flags to each selected target after
+it is created:
+
+```cmake
+option(PROJECT_ENABLE_OBFUSCATION "Enable xollvm obfuscation" OFF)
+
+if(PROJECT_ENABLE_OBFUSCATION)
+    if(NOT CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+        message(FATAL_ERROR "Obfuscation requires the supported xollvm Clang toolchain")
+    endif()
+    target_compile_options(${LIB_TARGET_NAME} PRIVATE
+        "$<$<COMPILE_LANGUAGE:CXX>:-mllvm>"
+        "$<$<COMPILE_LANGUAGE:CXX>:-enable-obfuscation>")
+    target_compile_options(${TARGET_NAME} PRIVATE
+        "$<$<COMPILE_LANGUAGE:CXX>:-mllvm>"
+        "$<$<COMPILE_LANGUAGE:CXX>:-enable-obfuscation>")
+endif()
+```
+
+Enable it deliberately with `-DPROJECT_ENABLE_OBFUSCATION=ON`; OFF adds neither
+flag through this helper. Clang identification alone does not establish xollvm
+support: perform the version/pass probe first. `PRIVATE` options do not propagate
+through linking, so cover every selected source-producing target, including
+object libraries. Inspect verbose build commands and response files for both
+flags and any flags inherited from toolchain files, environment or other helpers.
+Rebuild affected objects when changing the switch. Verify selected transforms
+using applied/skipped reports and ON/OFF runtime checks; the enable flag alone
+does not guarantee a particular function was transformed.
+
+For ANTI-REA's launcher workflow, `ANTI_REA_OBFUSCATION=NONE` disables its xollvm
+step; a selected level such as `LIGHT` explicitly invokes
+`opt -passes=obfuscation,verify`. Do not add the compiler's
+`-mllvm -enable-obfuscation` in that workflow, since it would enable a second
+pipeline invocation. `ANTI_REA_CODE_PROTECTION` independently controls baseline
+information protection and must not be confused with this obfuscation switch.
+
 Keep baseline diagnostics/locations/RTTI and release stripping enabled, while
 selecting control-flow transforms and VM by value and measured performance:
 
