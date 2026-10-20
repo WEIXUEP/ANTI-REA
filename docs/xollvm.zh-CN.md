@@ -53,3 +53,7 @@ Python launcher 固定种子、确定性模式、上游验证和指令预算，�
 复杂 IR 会增加构建、体积、启动和 CPU 开销。强度标签不是抗逆向强度测量，指令增长、性能和泄露计数分开报告。
 
 strenc 在初始化时解密，程序具备恢复机制，内存可见明文；不同于私钥不在程序内的公钥密封。VM 可跳过 EH、复杂 CFG 或过多块，报告和失败门槛防止误报成功。无基准依据不对数值热点重混淆。
+
+原生 Windows 验证脚本支持在原有工具链和依赖参数后增加 `--obfuscation MIXED_VM`，
+原始对照配置仍为 `NONE`。已测的运行行为、REA 恢复边界及 VM/flattening 合计成本见
+[Windows 验证记录](windows-validation.zh-CN.md)。

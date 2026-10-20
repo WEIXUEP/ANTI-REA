@@ -52,6 +52,14 @@ class AcceptanceBindingTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "outside release"):
             measurement.prepare(self.acceptance, self.root / "packages/release-protected/report")
 
+    def test_vm_profile_keeps_original_control_unobfuscated(self):
+        self.report["obfuscation"] = "MIXED_VM"
+        self.report["configurations"]["release-protected"]["obfuscation"] = "MIXED_VM"
+        self.save()
+        _, profiles = measurement.prepare(self.acceptance, self.root / "new-report")
+        self.assertEqual(profiles["baseline"]["obfuscation"], "NONE")
+        self.assertEqual(profiles["protected"]["obfuscation"], "MIXED_VM")
+
 
 if __name__ == "__main__":
     unittest.main()

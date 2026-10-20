@@ -14,6 +14,7 @@ import time
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 from anti_rea.crypto import generate_keys, load_keys
+from anti_rea.launcher import validate_obfuscation
 
 
 def require(ok, message):
@@ -45,6 +46,9 @@ def main(argv=None):
     parser.add_argument("--sodium-runtime", type=Path, help="Runtime DLL copied into each fresh staged package")
     parser.add_argument("--generator", default="NMake Makefiles JOM", choices=["NMake Makefiles JOM", "Ninja"])
     parser.add_argument("--jobs", type=int, default=8)
+    parser.add_argument("--obfuscation", default="NONE",
+                        choices=["NONE", "LIGHT", "MEDIUM", "HEAVY", "MIXED_VM"],
+                        help="Protected configurations only; original baseline always uses NONE")
     parser.add_argument("--out", type=Path, help="New evidence directory; never reuse an old acceptance run")
     args = parser.parse_args(argv)
     if os.name != "nt":
@@ -64,7 +68,9 @@ def main(argv=None):
     stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%fZ")
     output = (args.out or ROOT / "build/windows-acceptance" / stamp).resolve()
     output.mkdir(parents=True, exist_ok=False)
+    shutil.copyfile(__file__, output / "validate_windows.py")
     evidence = dict(schema=1, status="running", platform=sys.platform, commands=[], configurations={},
+                    obfuscation=args.obfuscation,
                     limitations=["Demo acceptance only; no Palace, numerical dependency, LTO, PCH or arbitrary plugin ABI claim.",
                                  "Protected private PDBs retain linker symbols; source debug metadata is removed by the launcher."])
 
@@ -99,6 +105,12 @@ def main(argv=None):
         require({r["source"] for r in reports} == {"engine.cpp", "main.cpp", "policy.cpp", "rtti.cpp", "diagnostics.cpp"},
                 "Missing translation-unit coverage")
         require(len({r["object"] for r in reports}) == 6 and all(r["abi"] == "msvc" for r in reports), "Invalid object/ABI coverage")
+        require(all(r["level"] == args.obfuscation for r in reports), "Incorrect obfuscation level")
+        if args.obfuscation != "NONE":
+            policy = [r for r in reports if r["source"] == "policy.cpp"]
+            require(len(policy) == 1, "Missing policy transformation report")
+            verified = validate_obfuscation(policy[0]["xollvm"], args.obfuscation)
+            require(policy[0].get("verified_passes") == verified, "Transformation evidence differs")
         result = {}
         for report in reports:
             for row in report["rtti"]:
@@ -113,7 +125,8 @@ def main(argv=None):
                    "-DCMAKE_BUILD_TYPE=" + config, "-DCMAKE_CXX_COMPILER=" + str(compiler),
                    "-DPython3_EXECUTABLE=" + sys.executable, "-DANTI_REA_OPT=" + str(opt),
                    "-DANTI_REA_CODE_PROTECTION=" + ("ON" if protected else "OFF"),
-                   "-DANTI_REA_OBFUSCATION=NONE", "-DANTI_REA_KEYS=" + str(keys),
+                   "-DANTI_REA_OBFUSCATION=" + (args.obfuscation if protected else "NONE"),
+                   "-DANTI_REA_KEYS=" + str(keys),
                    "-DCMAKE_PREFIX_PATH=" + str(args.sodium_prefix.resolve())]
         for kind in ("EXE", "SHARED"):
             command.append(f"-DCMAKE_{kind}_LINKER_FLAGS_{config.upper()}={flags}")
@@ -212,6 +225,7 @@ def main(argv=None):
                             require(any(r["opaque"] == raw and r["protected"] for r in mapping.values()), "Runtime name missing from map")
                     run([sys.executable, ROOT / "tools/anti_rea.py", "decode", "--build", build, "--rtti", names[label]["class"][0]])
                 evidence["configurations"][label] = dict(status="passed", rtti_checks=39,
+                    obfuscation=args.obfuscation if protected else "NONE",
                     artifacts=stage(build, label, protected, mapping), mapped_types=len(mapping))
                 save()
         build = builds["release-protected"]

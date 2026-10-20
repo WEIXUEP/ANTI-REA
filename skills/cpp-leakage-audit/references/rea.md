@@ -99,6 +99,28 @@ unknown edges and provider limitations still determine what can be concluded.
 No subprocess timeout is imposed on top of REA's provider deadlines; Ghidra
 startup and owned child cleanup remain REA's responsibility.
 
+## Reviewing Virtualized Functions
+
+Treat applied-transform evidence, readable VM implementation and recovered
+original semantics as separate results. Confirm the selected function actually
+received VM before interpreting a decompilation attempt. Locate the function in
+the current release through executable metadata and call sites; record any
+private symbols or maps used as analyst assistance.
+
+Inspect the wrapper, dispatcher, bytecode references and selected handlers.
+Preserve unresolved indirect edges, jump-table warnings and missing procedure
+entries. A successful query with empty callees does not establish a complete
+call graph. Nearby search results do not establish which function contains an
+interior address; check observed body ranges. The bridge's `function` selector
+expects a known procedure entry, not an arbitrary instruction address.
+
+Readable pseudocode or exposed constants are not automatic devirtualization.
+Claim algorithm recovery only after reconstructing the target computation and
+checking independent inputs against an authorized oracle. Source-based runtime
+checks establish correctness of protection, not recovery by REA. State whether
+dynamic tracing, symbolic execution or a custom devirtualizer was actually used;
+a failed static recovery does not establish that recovery is impossible.
+
 ## Corroborating Leakage Before and After Protection
 
 First capture the original scanner baseline and verify known-leaking controls.

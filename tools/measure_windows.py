@@ -56,6 +56,7 @@ def prepare(acceptance, output):
         if not builds or builds[0].get("exit_code") != 0 or "wall_seconds" not in builds[0]:
             raise ValueError("Acceptance lacks the initial clean-build timing; run the current validator")
         profiles[name] = dict(executable=str(package / "bin/anti-rea-demo.exe"), artifacts=artifacts,
+                              obfuscation=accepted.get("obfuscation", result.get("obfuscation", "NONE") if name == "protected" else "NONE"),
                               core_bytes=sum(row["bytes"] for row in artifacts.values()),
                               package_bytes=sum(p.stat().st_size for p in package.rglob("*") if p.is_file()),
                               build_seconds=builds[0]["wall_seconds"], workloads={})
@@ -130,7 +131,7 @@ def main(argv=None):
                       tool_sha256=digest(Path(__file__)), platform=platform.platform(), processor=platform.processor(),
                       compiler=result["compiler"], samples=args.samples, warmups=args.warmups, profiles=profiles,
                       limitations=[
-                          "Demo only, protection NONE obfuscation; not Palace or xollvm/VM performance.",
+                          "Demo only; protected obfuscation " + profiles["protected"]["obfuscation"] + "; not Palace or whole-application performance.",
                           "Build timing is one initial compile/link observation, excluding configure/tests/install; caches were not flushed.",
                           "Samples alternate profile order; workloads run sequentially, not concurrently with REA.",
                           "Startup/warning include fresh process, loader and I/O costs; warning is not isolated crypto time.",

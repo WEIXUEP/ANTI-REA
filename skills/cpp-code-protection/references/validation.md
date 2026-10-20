@@ -93,6 +93,14 @@ repeated statistical result. If no application performance budget exists, expens
 per-function choices remain pending; this is different from failed protection or
 silently downgraded settings.
 
+For VM targets, require applied-pass evidence for the actual function and use an
+independent integer/reference oracle for runtime behavior. Separate these checks
+from reverse-engineering resistance: wrapper/dispatcher pseudocode is not recovery
+of the original algorithm. Preserve unresolved handler edges and require a
+reconstructed computation tested on independent inputs before claiming successful
+devirtualization. Compare the hot policy loop separately from startup and ordinary
+numerical kernels; report combined VM/flattening costs as combined costs.
+
 Conclude with resolved findings, intentional exposures, pending decisions,
 unperformed checks and limits. Identify any project-specific adapter and manual
 judgment used. A Linux guided trial does not establish Windows support or universal

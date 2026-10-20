@@ -240,3 +240,85 @@ private under `build/windows-cost/20261020T040733401395Z/` and the sibling
 `20261020T040733401395Z-repeat/`. CPU time, peak memory, real Palace and Windows
 obfuscation/VM costs were not measured. Portable regressions completed 82 tests,
 with four platform/permission skips.
+
+## Windows MIXED_VM and REA Recovery (2026-10-20)
+
+**VM was applied and runtime acceptance passed. REA recovered readable wrapper
+and dispatcher representations, but did not automatically reconstruct the original
+formula in this trial. This does not establish that recovery is impossible.**
+
+A separate native run used the same LLVM/Intel environment, eight build jobs and
+`/DEBUG:FULL /OPT:REF /OPT:ICF /INCREMENTAL:NO`: OFF/NONE versus ON/MIXED_VM.
+Append `--obfuscation MIXED_VM` to the native acceptance command above; the default
+remains `NONE`. Private evidence is
+`build/windows-acceptance/20261020T042707207675Z/result.json`.
+
+### Applied Transforms and Behavior
+
+Debug and Release reports both require `policy_token` VM `ran/changed` (9 to 58
+IR instructions), and `policy_dispatch` MBA/split/flattening (32 to 1768 IR
+instructions). These are IR counts, not final machine instruction counts or
+resistance scores. All four Debug/Release OFF/ON configurations passed 39 RTTI
+and exception checks each. Recovery, relocation, private-package separation,
+same-key rebuild and all six objects rebuilding after key rotation passed.
+Release exact-corpus occurrences fell from six to zero, with no metadata gaps.
+Another 40 boundary/deterministic seeds per Release profile passed 80 independent
+one-round reference checks; the 500000-round benchmark matched the Python integer
+reference too. These establish runtime correctness, not recovery by REA.
+
+### Observed REA Limits
+
+Official REA 6.4.0/Ghidra 12.1.4 analyzed the release EXE with its scanner binding;
+no private PDB, IR, maps or source were supplied. Packages contain no PDB. Searching
+the original EXE for `policy` found no procedure names. PE function boundaries and
+the main loop's calls located the targets in this build.
+
+| Target | Release address | Observation |
+| --- | --- | --- |
+| Unprotected token control | `0x140007b00` | Eight instructions; pseudocode directly shows the original integer formula |
+| Main | `0x140001000` | Readable loop and two policy calls |
+| VM wrapper | `0x140008e50` | 46 analyzed instructions; readable context/call and some original constants |
+| VM dispatcher | `0x140009a90` | 72 analyzed instructions; partial pseudocode, unresolved handler targets |
+| Bytecode writer references | `0x14004a9c0`, `0x14004a9c7` | References found, but writer recovery remains incomplete |
+
+The dispatcher reports `Could not recover jumptable` and `Treating indirect jump
+as call`; its empty callee list is incomplete coverage, not absence of handlers.
+The bytecode-writer query failed because its address is not a known procedure
+entry. A nearby search hit at `0x14004a1e0` ends at `0x14004a8a5` and does not cover
+the writer. That successful query is not counted as writer recovery.
+No dynamic VM tracing, symbolic execution or dedicated devirtualizer was used.
+Retained Evidence, failed queries, independent verification and summary are under
+`build/rea-vm-validation/20261020T042707207675Z/`.
+
+### Observed Costs
+
+Measurements ran separately from REA with alternating profile order. The pilot
+used five warmups/31 samples; the repeat used ten warmups/101 samples per workload
+and profile. Repeat medians compare combined information protection plus
+VM/flattening, without isolating VM alone.
+
+| Metric | OFF/NONE | ON/MIXED_VM |
+| --- | ---: | ---: |
+| Initial compile/link, one observation (s) | 4.440 | 8.369 |
+| EXE + engine DLL bytes | 113664 | 377856 |
+| Startup process (ms) | 5.818 | 6.641 |
+| 500000-round inner policy loop (ms) | 2.544 | 74.376 |
+| One-warning process (ms) | 5.779 | 7.004 |
+
+The policy loop is approximately **29.2 times** the original duration; pilot
+medians were 2.552/74.622 ms. Repeat inner-loop p95 is 2.812/77.131 ms, while
+whole benchmark-process p95 is 9.798/184.392 ms. Protected-process maxima are
+120.138 ms startup, 196.481 ms benchmark and 119.917 ms warning; the tail cause
+remains unresolved. This is not a whole-application or numerical-kernel slowdown
+claim; avoid applying this configuration to numerical hotspots without a budget.
+
+The 462848-byte libsodium DLL is staged in both packages: 576534/840726 bytes.
+Removing unused sodium from the original package yields 113686 bytes; the
+protected package requires it. System CRTs, CPU time and peak memory are excluded.
+Raw samples and runner snapshots remain private under
+`build/windows-cost/20261020T042707207675Z-mixed-vm/` and its `-repeat` sibling.
+
+Regressions completed 83 tests with four platform/permission skips; both skill
+formats, standalone ZIP tools and strict MkDocs build passed. Skill references
+remain English and now distinguish VM application, algorithm recovery and
+incomplete indirect-call graphs.

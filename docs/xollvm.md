@@ -113,3 +113,8 @@ VM can skip functions containing exception-handling constructs, unsupported
 control flow or excessive blocks. Reports and fail-closed target checks prevent
 those skips from being mistaken for successful protection of the selected target.
 Keep hot numerical kernels out of heavy obfuscation unless benchmarks justify it.
+
+Native Windows validation accepts `tools/validate_windows.py --obfuscation
+MIXED_VM` with the same toolchain/dependency arguments as the default run. The
+original configurations remain `NONE`. See the [Windows validation record](windows-validation.md)
+for measured VM behavior, REA recovery limits and combined VM/flattening costs.
