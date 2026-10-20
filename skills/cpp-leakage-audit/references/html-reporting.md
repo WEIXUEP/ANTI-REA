@@ -1,111 +1,103 @@
-# Final HTML Analysis Reports
+# Leakage Diagnostics Interface
 
-Finish an analysis with a private, offline HTML report and a direct file link.
-Retain JSON, original baselines and raw evidence alongside it. This applies to
-leakage scans, native risk investigations, numeric recovery and VM reconstruction;
-HTML is the reading/navigation layer, not a replacement for evidence or a new
-security verdict. Honor an explicit user request for another format.
+For a leakage audit, deliver a dedicated offline HTML interface showing **what
+leaked, in which file, and at which location**. Retain the JSON baseline and raw
+evidence. The default deliverable is a leakage inspector, not an aggregate
+analysis dashboard, performance report or collection of REA transcripts.
+Honor an explicit user request for another format.
 
-## Generate the Deliverable
+## Generate and Open
 
-`audit.py --out <prefix>` now writes `.html` as well as `.json` and `.md`.
-`rea_audit.py --out <new-directory>` writes `report.html`, including planned or
-incomplete investigations. Their HTML defaults to a Chinese interface; original
-evidence and status values remain unchanged. These tools need the bundled
-`report_html.py` sibling; distribute the complete skill archive.
+`audit.py --out <prefix>` writes `<prefix>.html` together with `.json` and `.md`.
+Open the HTML directly. The scanner collects bounded source/byte context while
+it reads the inputs; the HTML does not need to reopen binaries or source files.
+Reports stay private and outside every release package.
 
-For a combined final report or a pair-probe report, use the independent renderer:
+To render an existing schema-2 audit JSON:
 
 ```bash
-python <skill>/scripts/report_html.py --input /private/original.json --input /private/protected.json --input /private/rea/report.json --input /private/pairs.json --out /private/final/analysis.html --package-root /staged/release
+python <skill>/scripts/report_html.py --input /private/leakage.json --view leakage --out /private/leakage-locations.html --package-root /staged/release
 ```
 
-Repeat `--input` and `--package-root` as needed. The input limit is 32 MiB per
-report. `--lang en` selects English; default is `zh-CN`. `--title` overrides the
-page title. The renderer creates a new `.html`, never replaces an existing file,
-and returns 0 for successful rendering or 2 for invalid input/output. Its success
-does **not** mean the supplied audit passed. Keep reports outside every release
-tree, supply those roots explicitly and retain all failed checks.
+Repeat `--input` for multiple audit snapshots, and `--package-root` for all release
+roots. `--lang en` selects English; default is Chinese. Auto view selects this
+interface when all inputs are leakage audits. `--title` overrides the page title.
+The standalone renderer accepts at most 32 MiB per input, creates a new `.html`,
+never replaces existing files and returns 0 for rendering success or 2 for errors.
+Rendering success does not mean the audit passed.
 
-The renderer reads JSON and writes HTML only: no target execution, REA queries,
-network, telemetry, external fonts, CDN assets or server. It works from `file://`
-without a build step or installation beyond Python 3.10+. Evidence is escaped as
-text; paths/URLs in evidence are not made into executable links. The page uses
-hash-restricted inline assets and a restrictive content security policy.
+The complete skill contains `report_html.py` and `leakage_html.py`; distribute
+both. Standard-library Python 3.10+ is sufficient for rendering. No web server,
+CDN, target execution, external font or network service is required.
 
-Existing scanner fingerprints change when scanner code changes. Re-scan preserved
-original artifacts into a new baseline before a new comparison; do not modify
-historical reports just to satisfy current tooling. The HTML renderer can still
-display retained older supported JSON without certifying its current validity.
+## Reading and Location Behavior
 
-## Findings Authored During Analysis
+- Left: the scanned file list and occurrence counts. Select a file to narrow the
+  list. When combining snapshots, retain their source-report identity.
+- Center: a compact list of exposed contents, categories, review status and
+  source line or raw binary offset. Search and category/status filters work on
+  the recorded evidence, filenames and offsets.
+- Right on desktop, below the list on narrow screens: the selected occurrence's
+  complete content, file, encoding, available SHA-256, exact location and context.
+  Clicking a list entry selects its details. Stable fragment links reopen that
+  occurrence; filtering cannot permanently hide a linked location.
+- For source findings, highlight the matching line and show at most two nearby
+  lines on each side, bounded to 1024 characters per line. This is captured text,
+  not proof that a preprocessor branch was compiled.
+- For binary findings with offsets, show a bounded hex/ASCII excerpt and highlight
+  the matching bytes. Context shows at most 16 leading bytes, 32 match bytes and
+  16 following bytes. Long matches can continue beyond the excerpt. Keep the
+  file offset distinct from RVA/VA; never invent a source line or virtual address.
+- Older JSON may have no context; state that explicitly. Metadata-only findings
+  may lack precise byte positions. Do not fabricate them by searching for a
+  symbol name that might occur more than once.
 
-For narrative interpretation, vulnerability reasoning or VM recovery conclusions,
-write a small private `kind=analysis` JSON and combine it with tool reports:
+The visible states distinguish exact known-sensitive hits, review candidates and
+allowed names. A parsed symbol or path is not automatically a confirmed leak of
+owned secrets. Imports, machine type and general readable-string inventory are
+ordinary metadata, hidden by default behind an explicit inventory toggle.
+They remain in JSON and can be displayed; this UI separation does not alter audit
+gates, allow rules or baseline comparisons. Actual denied/selected-name matches
+remain visible even if the same text also occurs in metadata.
 
-```json
-{
-  "schema": 1,
-  "kind": "analysis",
-  "title": "Selected function recovery",
-  "status": "partial",
-  "summary": "A known XOR value is recoverable; full function semantics remain unresolved.",
-  "artifacts": [
-    {"artifact": "engine.dll", "size": 123456, "sha256": "<actual digest>"}
-  ],
-  "findings": [
-    {"category": "constant-recovery", "status": "candidate",
-     "artifact": "engine.dll", "function": "selected_policy",
-     "offset": 4096, "rva": "0x2000", "va": "0x180002000",
-     "evidence": "Two adjacent DWORDs reconstruct the known value.",
-     "interpretation": "Relevant code references still need confirmation.",
-     "evidence_files": ["private-probe.json"],
-     "unresolved": ["Indirect caller not resolved"]}
-  ],
-  "not_checked": ["No fresh REA query completed for these bytes"],
-  "limitations": ["Known-corpus candidate, not complete devirtualization"]
-}
-```
+Show missing metadata/coverage checks prominently. Keep scanner scope, baseline
+comparison, fingerprints and raw records expandable so users can verify a result
+without making them the primary screen. A zero-result state does not mean no
+leakage exists outside the scanned corpus and channels.
 
-Substitute actual measured identities and addresses; omit unavailable fields.
-Use `line` for source lines, `offset` for raw file offsets and `rva`/`va` for
-addresses. Never derive a VA by assuming file offsets equal RVAs. The renderer
-shows integer offsets in decimal and hexadecimal; other record fields remain
-available in expandable evidence. Bind source-to-sink arguments, reconstruction
-inputs/holdouts, mismatches and assumptions in these records as appropriate.
-Do not promote candidates to confirmed findings through presentation alone.
+## Interface and Evidence Rules
 
-## Interface Rules
+Use an available frontend design skill when customizing this inspector; the
+downloaded audit skill must still work without it. Use a compact work-focused
+layout, restrained light colors, clear status accents and monospace only for
+code/addresses/hashes. Keep sections unframed. Wrap long paths and strings and
+provide visible keyboard focus. Avoid marketing composition or decorative media.
 
-Use an evidence workbench designed for repeated inspection. If a frontend design
-skill is available, consult it when customizing the interface; the downloaded
-audit skill must remain usable without that additional skill or network access.
+All extracted content, paths and symbols are untrusted text. Escape them instead
+of rendering raw HTML, executing commands or opening arbitrary URLs/tool links.
+The bundled page uses a restrictive content security policy and hash-restricted
+inline assets, without external requests. Never publish private reports, extracted
+secrets or target evidence with the public documentation or skill ZIP.
 
-- Put the scope and conclusion first, with unperformed checks and failed budgets
-  visible. Keep confirmed leaks, heuristic candidates, allowed names and recovery
-  claims distinct. A provider error or zero hits cannot appear as a clean bill.
-- Use a report navigation rail, compact summary band and an organized findings
-  table. Keep sections unframed. Reserve monospace for hashes, addresses and code;
-  use legible system text and a restrained light palette with meaningful accents.
-- Provide text search, category/status filters, explicit empty states, per-finding
-  fragment links and expandable complete evidence. Include artifact SHA-256,
-  source-report identity and exact available location. Preserve stable fragment
-  IDs when the same reports are rendered again.
-- Make long paths, symbols and hashes wrap. On narrow screens, render findings
-  as stacked rows with labels. Keep keyboard focus visible and evidence readable
-  when JavaScript is disabled. Printing must preserve readable findings.
-- Treat extracted strings, pseudocode, paths and raw REA output as untrusted text.
-  Never render them as HTML/Markdown scripts, execute embedded commands, fetch
-  mentioned URLs or add arbitrary `file:`, `javascript:` or tool-launch links.
-- Validate desktop and mobile screenshots plus actual search/filter/fragment
-  behavior in a browser when available. Check script-disabled readability,
-  malicious strings, coverage gaps and zero-result states. Report any unverified
-  browser behavior rather than claiming the report is validated from compilation.
+Validate actual selection, file/category/status filters, search, deep links,
+highlighted source/hex locations, empty states and metadata visibility. Inspect
+desktop/mobile screenshots and check that hostile strings remain inert. With
+JavaScript disabled all recorded details must remain readable. Report any browser
+behavior that could not be checked.
+
+Scanner-code changes invalidate a current baseline comparison. Re-scan preserved
+original artifacts into a new baseline; do not overwrite historical evidence.
+The renderer can display older audit JSON without certifying its current validity.
+
+## Other Analysis Modes
+
+`rea_audit.py` still writes its own `report.html`. An explicit
+`report_html.py --view analysis` can render REA triage, numeric-pair and authored
+`kind=analysis` JSON for a separately requested investigation. These are optional
+analysis views; do not substitute them for the leakage-location interface or
+automatically combine VM/performance material into a leakage diagnosis.
 
 ## Handoff
 
-Link the generated local HTML first, then the machine-readable/raw evidence when
-useful. State the substantive verdict and important gaps briefly in the final
-response. Do not publish analysis, binary evidence, paths, keys or private reports
-as part of documentation deployment. Only reviewed generic skill sources belong
-in the public skill ZIP.
+Link the leakage HTML first. Briefly identify important leaked contents, their
+files/locations and unperformed checks; link JSON/raw evidence when useful.

@@ -57,22 +57,22 @@ python <skill-directory>/scripts/probe_constant_pairs.py --binary /protected/app
 
 审计不隐含重编译、strip、生成密钥或安装工具链授权。用户提供修复后的产物时，可用同一语料、顺序和清单比较结果。
 
-## 最终 HTML 分析报告
+## 泄露位置诊断界面
 
-分析结束后默认交付离线 HTML，同时保留 JSON、Markdown、baseline 和原始证据。
-`audit.py --out`、`rea_audit.py --out` 自动生成 HTML；也可把扫描、REA 调查、
-数值探测和人工分析结论合并成一份私有报告：
+`audit.py --out` 默认生成独立的离线泄露诊断界面，同时保留 JSON、Markdown 和 baseline。
+左侧选择文件，中间查看泄露项，点击后在右侧定位到源码行或二进制偏移，并查看对应上下文。
+已有审计 JSON 也可以单独生成：
 
 ```bash
-python <skill-directory>/scripts/report_html.py --input /private/original.json --input /private/protected.json --input /private/pairs.json --out /private/final/analysis.html --package-root /staged/release
+python <skill-directory>/scripts/report_html.py --input /private/leakage.json --view leakage --out /private/leakage-locations.html --package-root /staged/release
 ```
 
-直接打开 HTML 即可阅读。页面包含报告导航、全文搜索、类别/状态筛选、逐条发现锚点、
-已知偏移和源码行、产物哈希及可展开的原始证据，未完成检查始终明确展示。
-界面默认中文，`--lang en` 可切换英文；不依赖服务器或 CDN。
-证据作为纯文本显示，渲染成功不代表审计通过，也不会把候选升级为已确认结论。
-独立生成器拒绝覆盖已有文件；报告须保存在发布包外。
-参见[HTML 报告与界面规则（英文）](skill/references/html-reporting.md)。
+源码命中高亮所在行，二进制命中展示有界的十六进制/ASCII 字节片段并高亮匹配位置；
+旧 JSON 未采集上下文时会明确提示。支持搜索、文件/类别/状态筛选及逐项定位链接。
+已知敏感项、待审查候选和已允许名称分别展示，普通导入符号和机器类型默认收起，
+未完成检查明确显示。界面默认中文，`--lang en` 切换英文；直接打开，不依赖服务器或 CDN。
+提取内容作为纯文本处理，报告保存在发布包外。REA/恢复等通用分析视图单独保留为可选，
+不代替泄露诊断主界面。参见[界面规则（英文）](skill/references/html-reporting.md)。
 
 ## 已验证的 Windows 泄露检查
 
@@ -108,6 +108,6 @@ ZIP 包含通用调查指导，不包含该样本的私有 trace、地址或专�
 - [REA 子模块、CLI/MCP 和漏洞调查（英文）](skill/references/rea.md)
 - [虚拟化函数恢复流程（英文）](skill/references/vm-recovery.md)
 - [数值 baseline 与恢复反证（英文）](skill/references/numeric-recovery.md)
-- [最终 HTML 报告与界面规则（英文）](skill/references/html-reporting.md)
+- [泄露位置界面与规则（英文）](skill/references/html-reporting.md)
 
 网站和 ZIP 使用相同的白名单源文件。源码启发式检测不是 C++ 解析器；字节匹配不能证明运行路径，零匹配也不意味着无法逆向。

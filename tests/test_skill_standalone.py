@@ -154,6 +154,8 @@ class StandaloneSkillTests(unittest.TestCase):
                                  "--out", combined, no_site=True)
         self.assertEqual(rendered.returncode, 0, rendered.stderr)
         self.assertIn("7 / 0x7", combined.read_text(encoding="utf-8"))
+        self.assertIn('class="leak-row"', combined.read_text(encoding="utf-8"))
+        self.assertIn('class="hex-context"', combined.read_text(encoding="utf-8"))
         package = self.root / "stage"
         package.mkdir()
         (package / "private-key.json").write_text("synthetic secret marker")

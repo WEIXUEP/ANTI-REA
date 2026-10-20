@@ -18,6 +18,7 @@ SKILL_FILES = {
         "scripts/rea_audit.py",
         "scripts/probe_constant_pairs.py",
         "scripts/report_html.py",
+        "scripts/leakage_html.py",
         "scripts/requirements.txt",
         "agents/openai.yaml",
     ),

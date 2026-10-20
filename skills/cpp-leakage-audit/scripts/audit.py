@@ -141,8 +141,19 @@ def scan_binary(path, functions=(), variables=(), deny=(), data=None, *, all_str
         key = category, evidence, offset, encoding
         if key not in seen:
             seen.add(key)
-            findings.append(dict(artifact=str(path), category=category, evidence=evidence[:1024],
-                                 offset=offset, encoding=encoding, status=status))
+            row = dict(artifact=str(path), category=category, evidence=evidence[:1024],
+                       offset=offset, encoding=encoding, status=status)
+            if offset is not None:
+                if category == "specified-constant":
+                    match_size = len(constant_bytes(evidence))
+                else:
+                    codec = {"ASCII": "ascii", "UTF-8": "utf-8", "UTF-16LE": "utf-16le", "UTF-16BE": "utf-16be"}.get(encoding, "utf-8")
+                    match_size = len(evidence.encode(codec, errors="replace"))
+                start = max(0, offset - 16)
+                end = min(len(data), offset + min(match_size, 32) + 16)
+                row["context"] = dict(kind="bytes", start=start, hex=data[start:end].hex(),
+                                      match_start=offset, match_size=match_size)
+            findings.append(row)
 
     for offset, encoding, text in strings(data):
         width = 2 if encoding.startswith("UTF") else 1
@@ -218,15 +229,18 @@ def scan_source(root):
         relative = Path(path.name) if root.is_file() else path.relative_to(root)
         if any(part in {"build", "out", ".git", ".private", ".venv"} for part in relative.parts):
             continue
-        for number, line in enumerate(path.read_text(errors="replace").splitlines(), 1):
+        source_lines = path.read_text(errors="replace").splitlines()
+        for number, line in enumerate(source_lines, 1):
+            context = dict(kind="source", lines=[dict(line=index + 1, text=source_lines[index][:1024])
+                           for index in range(max(0, number - 3), min(len(source_lines), number + 2))])
             for match in path_matches(line):
                 findings.append(dict(artifact=path.name if root.is_file() else path.relative_to(root).as_posix(),
-                                     category="source-path", evidence=match[0], line=number, status="candidate"))
+                                     category="source-path", evidence=match[0], line=number, status="candidate", context=context, path=str(path.resolve())))
             for category, pattern in SOURCE_PATTERNS.items():
                 if re.search(pattern, line):
                     findings.append(dict(artifact=path.name if root.is_file() else path.relative_to(root).as_posix(),
                                          category=category, evidence=line.strip()[:512], line=number,
-                                         status="candidate"))
+                                         status="candidate", context=context, path=str(path.resolve())))
     return findings
 
 
@@ -332,7 +346,7 @@ def _main(argv=None):
             parser.error("Keep audit reports outside the release package")
     for label, binary, explicit in inputs:
         data = binary.read_bytes()
-        result["artifacts"].append(dict(artifact=label, size=len(data), sha256=hashlib.sha256(data).hexdigest()))
+        result["artifacts"].append(dict(artifact=label, path=str(binary.resolve()), size=len(data), sha256=hashlib.sha256(data).hexdigest()))
         rows, unchecked = scan_binary(binary, args.function, args.variable, args.deny,
                                       data=data, all_strings=args.all_strings, constants=args.constant)
         for row in rows:

@@ -7,6 +7,7 @@ import hashlib
 from html import escape
 import json
 from pathlib import Path
+import runpy
 import sys
 
 
@@ -168,7 +169,7 @@ def location(row, labels):
     return ''.join(pieces) or text(labels["unknown"])
 
 
-def render(documents, title=None, lang="zh-CN"):
+def render_analysis(documents, title=None, lang="zh-CN"):
     """Documents are (source label, JSON object) pairs; report values are inert text."""
     labels = LABELS[lang]
     title = title or labels["title"]
@@ -250,12 +251,23 @@ def render(documents, title=None, lang="zh-CN"):
             '<noscript><p class="warning">' + text(labels["nojs"]) + '</p></noscript>' + ''.join(sections) + '</main></div><script>' + SCRIPT + '</script></body></html>')
 
 
+def render(documents, title=None, lang="zh-CN", view="auto"):
+    documents = list(documents)
+    audits_only = bool(documents) and all(isinstance(report, dict) and report.get("schema") == 2 for _, report in documents)
+    if view == "leakage" or (view == "auto" and audits_only):
+        renderer = runpy.run_path(str(Path(__file__).with_name("leakage_html.py")))["render"]
+        return renderer(documents, title, lang)
+    return render_analysis(documents, title, lang)
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--input", type=Path, action="append", required=True)
     parser.add_argument("--out", type=Path, required=True, help="New private .html file")
     parser.add_argument("--package-root", type=Path, action="append", default=[], help="Reject output inside each release root")
     parser.add_argument("--title")
+    parser.add_argument("--view", choices=("auto", "leakage", "analysis"), default="auto",
+                        help="Auto uses the dedicated leakage interface for audit-only inputs")
     parser.add_argument("--lang", choices=LABELS, default="zh-CN")
     args = parser.parse_args(argv)
     try:
@@ -276,7 +288,7 @@ def main(argv=None):
             if isinstance(report, dict) and isinstance(report.get("binding"), dict):
                 if output == Path(report["binding"].get("path", "")).resolve():
                     raise ValueError("Output must not replace a bound target")
-        page = render(documents, args.title, args.lang)
+        page = render(documents, args.title, args.lang, args.view)
         output.parent.mkdir(parents=True, exist_ok=True)
         with args.out.open("x", encoding="utf-8") as stream:
             stream.write(page)

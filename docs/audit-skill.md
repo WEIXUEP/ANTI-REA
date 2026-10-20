@@ -77,24 +77,26 @@ An audit does not authorize rebuilding, stripping, generating keys or installing
 toolchains. The skill can recommend fixes and compare a provided rebuilt release
 using the same corpus and inventory, without performing those changes itself.
 
-## Final HTML Analysis
+## Leakage Location Interface
 
-Analysis now ends with an offline HTML report, while JSON, Markdown, baselines and
-raw evidence remain available. `audit.py --out` and `rea_audit.py --out` generate
-HTML automatically. A private combined report can include scans, REA triage,
-numeric probes and authored recovery conclusions:
+`audit.py --out` generates a dedicated offline leakage inspector, alongside JSON
+and Markdown. The screen focuses on exposed contents and their locations: select
+a file on the left, select an occurrence in the center and inspect its source line
+or binary offset/context on the right. Existing audit JSON can be rendered with:
 
 ```bash
-python <skill-directory>/scripts/report_html.py --input /private/original.json --input /private/protected.json --input /private/pairs.json --out /private/final/analysis.html --package-root /staged/release
+python <skill-directory>/scripts/report_html.py --input /private/leakage.json --view leakage --out /private/leakage-locations.html --package-root /staged/release
 ```
 
-Open the HTML directly. It includes report navigation, search, category/status
-filters, per-finding anchors, exact available offsets/lines, artifact hashes and
-expandable raw evidence. Coverage gaps stay visible. The default interface is
-Chinese; use `--lang en` for English. It needs no server or CDN. Evidence remains
-inert text, and rendering does not turn candidates into confirmed findings.
-The new renderer refuses existing outputs; retain private reports outside releases.
-See [HTML reporting and interface rules](skill/references/html-reporting.md).
+Source matches highlight the recorded line; binary matches highlight bytes in a
+bounded hex/ASCII excerpt. Older JSON without context says so. Search, file,
+category/status filters and fragment links locate individual occurrences.
+Known sensitive hits, candidates and allowed names remain distinct; ordinary
+imports/machine metadata are hidden behind a toggle. Incomplete checks stay visible.
+The interface defaults to Chinese (`--lang en` for English), opens directly and
+requires no server/CDN. Private evidence stays inert text. General REA/recovery
+analysis views remain optional and separate from this diagnosis screen.
+See [interface rules](skill/references/html-reporting.md).
 
 ## Verified Windows Leakage Checks
 
@@ -136,7 +138,7 @@ private traces, addresses or decoder, and does not provide one-click devirtualiz
 - [REA submodule, CLI/MCP interfaces and native security review](skill/references/rea.md)
 - [Virtualized function recovery](skill/references/vm-recovery.md)
 - [Numeric baseline and recovery countertest](skill/references/numeric-recovery.md)
-- [Final HTML reports and interface rules](skill/references/html-reporting.md)
+- [Leakage location interface and rules](skill/references/html-reporting.md)
 
 These pages and the allowlisted ZIP come from the same maintained skill sources.
 Source heuristics are not a C++ parser; exact byte matches are not proof of an

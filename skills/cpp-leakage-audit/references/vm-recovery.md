@@ -1,8 +1,9 @@
 # Virtualized Function Recovery
 
-Deliver the final interpretation as an offline HTML report using
-[html-reporting.md](html-reporting.md), with preserved raw evidence and separate
-visibility, execution, reconstruction and validation conclusions.
+For leakage diagnosis, use the dedicated location interface in
+[html-reporting.md](html-reporting.md). Keep separately requested VM recovery
+reports and their visibility/execution/reconstruction conclusions distinct from
+that screen; a general analysis HTML remains optional.
 
 Use when asked whether a selected owned/authorized function can be understood
 after virtualization. Inspect the supplied artifact; do not enable protection,

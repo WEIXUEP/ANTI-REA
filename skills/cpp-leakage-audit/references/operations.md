@@ -57,9 +57,9 @@ formats, PDB contents and compressed debug data are not parsed.
 
 ## Baselines and Gates
 
-`--out` writes private JSON, Markdown and offline HTML. Read
-[html-reporting.md](html-reporting.md) for the final analysis deliverable,
-cross-report navigation and the independent `scripts/report_html.py` renderer.
+`--out` writes private JSON, Markdown and a dedicated offline leakage-location
+HTML interface. Read [html-reporting.md](html-reporting.md) for file navigation,
+occurrence selection, source/hex context and `scripts/report_html.py --view leakage`.
 
 Save the original report before repairs; capture is not a clean-release gate.
 For provided post-repair artifacts, use `--baseline /private/reports/original.json`

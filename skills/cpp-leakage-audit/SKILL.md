@@ -118,14 +118,17 @@ Missing providers or failed queries are incomplete checks, never passing reviews
 
 ## Report
 
-Finish analysis with a private offline HTML report and a direct file link;
-retain original JSON, baselines and raw evidence. Follow
-[html-reporting.md](references/html-reporting.md) for the final reading interface,
-combined reports, authored findings, location anchors and browser validation.
-`audit.py --out` and `rea_audit.py --out` generate HTML by default;
-`scripts/report_html.py` combines supported evidence without executing targets.
-Honor an explicit alternative format. Rendering success never changes an audit
-or recovery verdict, and HTML reports must stay outside release/publication trees.
+For leakage diagnosis, deliver a dedicated offline HTML **leakage-location
+inspector**: file navigation, exposed-content list and selected source-line or
+binary-offset details with bounded context. Follow
+[html-reporting.md](references/html-reporting.md) for the interface and validation.
+`audit.py --out` generates this interface by default; existing audit JSON can use
+`scripts/report_html.py --view leakage`. Retain JSON, baselines and raw evidence.
+Keep ordinary metadata separate from leakage and distinguish known-sensitive
+hits, candidates and allowed names. General REA/recovery reports are optional
+separate views, not the default leakage screen. Honor an explicit alternative
+format. Rendering success never changes audit verdicts; HTML stays private and
+outside release/publication trees.
 
 Lead with prioritized confirmed findings, artifact identity and offset or source
 line, likely origin and scoped recommendations. List intentional public names,

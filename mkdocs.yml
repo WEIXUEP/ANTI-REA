@@ -106,7 +106,7 @@ nav:
       - REA Native Security Review: skill/references/rea.md
       - Virtualized Function Recovery: skill/references/vm-recovery.md
       - Numeric Recovery Countertest: skill/references/numeric-recovery.md
-      - HTML Analysis Reports: skill/references/html-reporting.md
+      - Leakage Location Interface: skill/references/html-reporting.md
   - Code Protection Skill:
       - Using the Skill: using-protection-skill.md
       - Skill Instructions: protection-skill/index.md
