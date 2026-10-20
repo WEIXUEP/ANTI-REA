@@ -23,6 +23,12 @@ python <skill-directory>/scripts/audit.py --package /staged/release \
 
 路径始终检测，指定函数名/变量名默认为空。`--all-strings` 输出私有的全局可读字符串清单。baseline 和报告含敏感证据，禁止安装到发布包。
 
+数值语料可重复指定，例如 `--constant u32le:0x5a827999 --constant f64be:0.125`。
+支持无符号 32/64 位整数及 IEEE-754 32/64 位浮点数的大小端编码，记录精确文件偏移，
+并纳入 baseline 语料一致性检查及 `--fail-on-deny` 门槛。命中证明字节存在，不证明计算用途；
+还需检查调用者、共享表和相关引用，不能只查被虚拟化的函数体。
+参见[参考项目改进及 Windows 实测](reference-improvements.zh-CN.md)。
+
 ## 给代理的请求示例
 
 ```text

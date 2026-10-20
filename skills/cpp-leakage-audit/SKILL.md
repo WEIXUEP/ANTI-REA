@@ -58,6 +58,12 @@ Package symlinks and empty packages are rejected, not silently skipped.
 
 Review source locations, runtime literals, RTTI, static/dynamic symbols, debug
 records, loader paths and packaged private files as separate channels.
+For selected algorithm constants, add repeatable `--constant` specifications,
+such as `u32le:0x5a827999` or `f64be:0.125`, to the original and follow-up scans.
+Widths and byte order are explicit; a hit confirms bytes, not their semantic use.
+Review the core function's callers, callees and shared tables as well as its
+body. Record the reviewed neighborhood and unresolved edges; function-level VM
+protection does not by itself hide constants in wrappers or global data.
 Read [interpretation.md](references/interpretation.md) to classify findings and
 recommend a mitigation without equating stripping with encryption.
 Preserve required imports and public exports; decompiler-generated variable
@@ -98,6 +104,8 @@ and allocation/lifetime logic when imports provide no useful seeds. Separate
 observed instructions, decompiler-derived flow, hypotheses and unknowns. A
 static call path alone does not establish runtime reachability or exploitability.
 Retain REA Evidence, unresolved indirect/alias edges and budget truncation.
+Treat algorithm-looking names, crypto tables and decoy routines as hypotheses
+until references and relevant control/data paths support their role.
 Missing providers or failed queries are incomplete checks, never passing reviews.
 
 ## Report

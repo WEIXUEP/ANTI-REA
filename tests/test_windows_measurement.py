@@ -60,6 +60,25 @@ class AcceptanceBindingTests(unittest.TestCase):
         self.assertEqual(profiles["baseline"]["obfuscation"], "NONE")
         self.assertEqual(profiles["protected"]["obfuscation"], "MIXED_VM")
 
+    def test_explicit_cost_budgets_and_relative_speed(self):
+        profiles = {}
+        for name, multiplier in (("baseline", 1), ("protected", 2)):
+            workloads = {mode: {field: dict(median=multiplier)} for mode, field in (
+                ("startup", "process_wall_seconds"), ("bench", "inner_seconds"), ("warning", "process_wall_seconds"))}
+            profiles[name] = dict(core_bytes=10 * multiplier, package_bytes=20 * multiplier,
+                                  build_seconds=multiplier, workloads=workloads)
+        differences, checks = measurement.compare_cost(profiles, dict(bench=2, package_bytes=1.5))
+        self.assertEqual(differences["bench"]["relative_speed_percent"], 50)
+        self.assertEqual([row["status"] for row in checks], ["passed", "failed"])
+        profiles["baseline"]["workloads"]["bench"]["inner_seconds"]["median"] = 0
+        _, checks = measurement.compare_cost(profiles, dict(bench=2))
+        self.assertEqual(checks[0]["status"], "incomplete")
+        profiles["baseline"]["workloads"]["bench"]["inner_seconds"]["median"] = 1
+        profiles["protected"]["workloads"]["bench"]["inner_seconds"]["median"] = 0
+        _, checks = measurement.compare_cost(profiles, dict(bench=2))
+        self.assertEqual(checks[0]["status"], "incomplete")
+        self.assertEqual(measurement.compare_cost(profiles, {})[1], [])
+
 
 if __name__ == "__main__":
     unittest.main()

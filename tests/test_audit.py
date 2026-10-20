@@ -4,6 +4,7 @@ import json
 import os
 from pathlib import Path
 import subprocess
+import struct
 import sys
 import tempfile
 import unittest
@@ -28,6 +29,47 @@ class AuditAcceptanceTests(unittest.TestCase):
             self.assertIn(("XY", 1, "UTF-8"), hits)
             self.assertIn(("内部错误", 4, "UTF-8"), hits)
             self.assertIn(("秘密", 17, "UTF-16LE"), hits)
+
+    def test_numeric_constants_width_endian_floating_bits_and_offsets(self):
+        specifications = ["u32le:0x5a827999", "u32be:0x12345678", "u64le:0x123456789abcdef0",
+                          "u64be:0x1020304050607080", "f32le:0.125", "f32be:-0.0", "f64le:0.125", "f64be:1.5"]
+        encodings = [struct.pack(fmt, value) for fmt, value in (
+            ("<I", 0x5a827999), (">I", 0x12345678), ("<Q", 0x123456789abcdef0),
+            (">Q", 0x1020304050607080), ("<f", 0.125), (">f", -0.0), ("<d", 0.125), (">d", 1.5))]
+        data = b"\xfe" + b"\xff".join(encodings)
+        rows, _ = audit.scan_binary("fixture.dat", data=data, constants=specifications)
+        position = 1
+        for specification, encoded in zip(specifications, encodings):
+            self.assertTrue(any(row["category"] == "specified-constant" and row["evidence"] == specification
+                                and row["offset"] == position and row["status"] == "confirmed" for row in rows))
+            position += len(encoded) + 1
+        self.assertFalse(any(row["category"] == "specified-constant"
+                             for row in audit.scan_binary("fixture.dat", data=encodings[0], constants=["u32be:0x5a827999"])[0]))
+
+    def test_numeric_constant_baseline_gates_and_invalid_specifications(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            binary = root / "data.dat"
+            binary.write_bytes(struct.pack("<I", 0x5a827999))
+            before = root / "before"
+            options = ("--package", root / "package")
+            (root / "package").mkdir()
+            target = root / "package/data.dat"
+            target.write_bytes(binary.read_bytes())
+            result = self.run_cli(*options, "--constant", "u32le:0x5a827999", "--out", before, "--fail-on-deny")
+            self.assertEqual(result.returncode, 1, result.stderr)
+            target.write_bytes(b"\x01\x02\x03\x04")
+            after = root / "after"
+            result = self.run_cli(*options, "--constant", "u32le:0x5a827999", "--baseline", before.with_suffix(".json"),
+                                  "--out", after, "--fail-on-deny")
+            self.assertEqual(result.returncode, 0, result.stderr)
+            report = json.loads(after.with_suffix(".json").read_text())
+            self.assertEqual(report["comparison"]["resolved"][0]["category"], "specified-constant")
+            self.assertEqual(self.run_cli(*options, "--constant", "u32be:0x5a827999",
+                                          "--baseline", before.with_suffix(".json")).returncode, 2)
+            for specification in ("u32:1", "u32le:-1", "u32le:0x100000000", "f64le:nan", "f32be:inf", "f32le:1e100"):
+                with self.subTest(specification=specification):
+                    self.assertEqual(self.run_cli("--binary", binary, "--constant", specification).returncode, 2)
 
     def test_baseline_with_corpus_file_global_strings_and_multiple_packages(self):
         with tempfile.TemporaryDirectory() as directory:

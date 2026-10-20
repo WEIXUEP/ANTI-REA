@@ -157,3 +157,27 @@ Private IR, maps and obfuscation reports intentionally retain original names.
 Generated JSON measurements and raw logs stay under ignored build directories.
 Published summaries redact developer roots. Inspect any selected raw evidence
 before adding it to a public repository.
+
+## Relative Speed and Budget Gates
+
+The native Windows `tools/measure_windows.py` accepts predeclared startup,
+inner policy-loop and package-size budgets; see the [Windows guide](windows.md).
+Exceeded limits retain observed results and return nonzero. Functional success
+does not override a failed budget.
+
+The independent protection skill's `scripts/measure.py` accepts optional
+top-level `comparisons` in its workload manifest:
+
+```json
+{"reference": "baseline", "target": "protected", "max_slowdown": 1.25, "max_size_ratio": 2.0}
+```
+
+Place this object in the `comparisons` array and name existing profiles. See the
+[operations reference](protection-skill/references/operations.md) for the full
+manifest. Profile order rotates between rounds; individual times are retained,
+and declared artifact sizes/SHA-256 are rechecked after execution. Size gates
+require declared artifacts and a valid reference size. Failed profiles or
+unavailable references cannot pass requested gates. Relative speed is the
+inverse time ratio: twice the duration means 50% speed, not subtraction of a
+100% overhead. Generic process wall time is distinct from the Windows benchmark's
+internally measured policy loop.

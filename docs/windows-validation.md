@@ -560,3 +560,13 @@ reload the registration configuration.
 Raw responses, stderr, per-run timing/resources, runner snapshots and
 `summary.json` remain private in `build/backend-comparison/20261020-r001/`,
 excluded from documentation and skill ZIPs.
+
+## Numeric Leakage and Budget Checks (2026-10-20)
+
+The reference review led to explicit numeric constant scanning, native Windows
+performance budgets, and standalone measurement order rotation, size budgets and
+before/after artifact checks. Positive/negative controls and independent ZIP
+checks reused retained native demos: the selected constant remained visible and
+MIXED_VM's policy loop exceeded a 2x budget, both correctly failing their gates.
+See [changes, sources and measurements](reference-improvements.md). Production
+Palace was not involved.

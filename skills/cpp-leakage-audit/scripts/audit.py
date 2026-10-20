@@ -4,8 +4,10 @@ import argparse
 import hashlib
 import io
 import json
+import math
 from pathlib import Path
 import re
+import struct
 import sys
 
 PATH = re.compile(r"(?:(?<![A-Za-z0-9])[A-Za-z]:[\\/][^\s<>\"|]*|\\\\[A-Za-z0-9_.-]+\\[^\s<>\"|]+|(?<![A-Za-z0-9:])/(?:[A-Za-z0-9_.+@-]+/)+[A-Za-z0-9_.+@-]*|(?:[A-Za-z0-9_.-]+[/\\])+[A-Za-z0-9_.-]+\.[A-Za-z0-9]+)")
@@ -19,6 +21,24 @@ SOURCE_PATTERNS = {
     "explicit-export": r"__declspec\s*\(\s*dllexport|visibility\s*\(\s*\"default\"",
 }
 PRIVATE_SUFFIXES = {".pdb", ".ilk", ".exp", ".obj", ".o", ".lib", ".a", ".ll", ".bc", ".map", ".debug", ".key", ".pem"}
+
+
+def constant_bytes(specification):
+    """Encode an explicitly selected value; never guess widths or byte order."""
+    if not isinstance(specification, str):
+        raise ValueError("Constant must be a type:value string")
+    kind, separator, value = specification.partition(":")
+    formats = {"u32le": "<I", "u32be": ">I", "u64le": "<Q", "u64be": ">Q",
+               "f32le": "<f", "f32be": ">f", "f64le": "<d", "f64be": ">d"}
+    if not separator or kind not in formats or not value.strip():
+        raise ValueError("Use u32le/u32be/u64le/u64be/f32le/f32be/f64le/f64be:value")
+    try:
+        number = int(value, 0) if kind.startswith("u") else float(value)
+        if kind.startswith("f") and not math.isfinite(number):
+            raise ValueError("Floating constants must be finite")
+        return struct.pack(formats[kind], number)
+    except (ValueError, OverflowError, struct.error) as error:
+        raise ValueError("Invalid or out-of-range numeric constant") from error
 
 
 def private_artifact(path):
@@ -110,7 +130,7 @@ def metadata(data):
     return rows, unchecked
 
 
-def scan_binary(path, functions=(), variables=(), deny=(), data=None, *, all_strings=False):
+def scan_binary(path, functions=(), variables=(), deny=(), data=None, *, all_strings=False, constants=()):
     path = Path(path)
     if data is None:
         data = path.read_bytes()
@@ -147,6 +167,12 @@ def scan_binary(path, functions=(), variables=(), deny=(), data=None, *, all_str
                 while (offset := data.find(needle, start)) >= 0:
                     add(category, name, offset, encoding.upper(), "confirmed")
                     start = offset + len(needle)
+    for specification in constants:
+        needle = constant_bytes(specification)
+        start = 0
+        while (offset := data.find(needle, start)) >= 0:
+            add("specified-constant", specification, offset, specification.split(":", 1)[0].upper(), "confirmed")
+            start = offset + 1
     try:
         rows, unchecked = metadata(data)
         for category, evidence in rows:
@@ -248,6 +274,7 @@ def _main(argv=None):
     parser.add_argument("--baseline", help="Compare against a saved original-program audit JSON")
     parser.add_argument("--function", action="append", default=[])
     parser.add_argument("--variable", action="append", default=[])
+    parser.add_argument("--constant", action="append", default=[], help="Exact numeric bytes, e.g. u32le:0x5a827999 or f64be:0.125; repeatable")
     parser.add_argument("--deny", action="append", default=[])
     parser.add_argument("--allow", help="JSON list of pattern/reason objects")
     parser.add_argument("--deny-file", help="UTF-8 JSON list of exact sensitive strings")
@@ -257,6 +284,8 @@ def _main(argv=None):
     parser.add_argument("--require-metadata", action="store_true", help="Nonzero status for unperformed structured checks")
     parser.add_argument("--fail-on-private", action="store_true", help="Nonzero status for unaccepted package private-artifact candidates")
     args = parser.parse_args(argv)
+    for specification in args.constant:
+        constant_bytes(specification)
     if args.deny_file:
         corpus = json.loads(Path(args.deny_file).read_text(encoding="utf-8-sig"))
         if not isinstance(corpus, list) or not all(isinstance(item, str) and item for item in corpus):
@@ -277,11 +306,13 @@ def _main(argv=None):
     result = dict(schema=2, scanner_sha256=hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
                   findings=[], not_checked=[], artifacts=[], scan=dict(
         functions=sorted(set(args.function)), variables=sorted(set(args.variable)),
+        constants=sorted(set(args.constant)),
         deny=sorted(set(args.deny)), allow=rules, source=bool(args.source),
         package=bool(args.package), package_count=len(args.package),
         all_strings=args.all_strings, binary_count=len(args.binary)), limitations=[
         "Paths and source matches are candidates; arbitrary data may resemble paths.",
         "No disassembly, memory inspection, encrypted-data recovery, or complete local-variable enumeration.",
+        "Numeric matches confirm encoded bytes only, not their type, ownership, execution or role; transformed or split constants may be missed.",
         "PDB contents and DWARF variable DIEs are not parsed; keep private debug artifacts out of releases."])
     inputs = [(f"binary/{index}/{Path(binary).name}", Path(binary), True)
               for index, binary in enumerate(args.binary)]
@@ -301,7 +332,7 @@ def _main(argv=None):
         data = binary.read_bytes()
         result["artifacts"].append(dict(artifact=label, size=len(data), sha256=hashlib.sha256(data).hexdigest()))
         rows, unchecked = scan_binary(binary, args.function, args.variable, args.deny,
-                                      data=data, all_strings=args.all_strings)
+                                      data=data, all_strings=args.all_strings, constants=args.constant)
         for row in rows:
             row["artifact"] = label
         result["findings"].extend(rows)
@@ -333,7 +364,7 @@ def _main(argv=None):
     if args.require_metadata and result["not_checked"]:
         return 2
     return int((args.fail_on_deny and any(row["status"] == "confirmed" and row["category"] in {
-        "denied-text", "specified-function", "specified-variable", "private-artifact"} for row in result["findings"]))
+        "denied-text", "specified-function", "specified-variable", "specified-constant", "private-artifact"} for row in result["findings"]))
         or (args.fail_on_private and any(row["category"] == "private-artifact" and row["status"] != "allowed"
                                         for row in result["findings"])))
 

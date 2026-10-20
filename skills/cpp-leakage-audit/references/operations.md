@@ -29,6 +29,22 @@ strings. `--all-strings` adds printable ASCII and ASCII-range UTF-16 inventory,
 not a full Unicode/disassembly/memory scan. Evidence is bounded to 1024 characters
 per finding; the offset points to the match.
 
+Use repeatable `--constant type:value` for a reviewed numeric corpus. Supported
+types are `u32le`, `u32be`, `u64le`, `u64be`, `f32le`, `f32be`, `f64le`, `f64be`.
+Unsigned integers accept decimal or `0x` notation; finite floats use decimal
+notation and IEEE-754 binary32/binary64 packing. Width and byte order are never
+guessed. Out-of-range values, NaN and infinity are rejected.
+
+```bash
+python <skill-directory>/scripts/audit.py --binary /original/app.exe \
+  --constant u32le:0x5a827999 --constant f64be:0.125 --out /private/numeric-before
+```
+
+`specified-constant` records exact raw-file offsets, including overlapping byte
+matches. It does not prove a numeric type or executing use. Small/common values
+can produce many incidental hits; compiler folding, split immediates, encryption
+and different representations can hide selected values. No disassembler runs.
+
 The source scanner is line-based: it does not parse C++, evaluate macros, follow
 includes or resolve effective compile options. Inspect compile commands manually
 when interpreting conditional source evidence.
@@ -45,11 +61,13 @@ Save the original report before repairs; capture is not a clean-release gate.
 For provided post-repair artifacts, use `--baseline /private/reports/original.json`
 with a new `--out`, identical binary/package ordering, names, corpus, allow rules
 and `--all-strings` setting. Schema-2 reports fingerprint the scanner and artifacts.
+Numeric constant specifications are also part of the comparison scope. A scanner
+upgrade requires a fresh original baseline; retain earlier reports unchanged.
 Comparisons ignore byte-offset shifts but reject changed scope/inventory/scanner.
 Review renamed resources or added files separately; never edit the old baseline.
 Reports cannot overwrite inputs or enter a scanned release tree.
 
-`--fail-on-deny` fails on exact denied bytes and confirmed private package
+`--fail-on-deny` fails on exact denied/name/numeric-constant bytes and confirmed private package
 findings; `--fail-on-private` gates private findings separately.
 `--require-metadata` fails when requested native checks cannot be performed.
 None proves all candidate paths or possible exposures have been eliminated.

@@ -116,3 +116,21 @@ JSON 给出中位数、最小值、最大值和总体标准差，Markdown 展示
 
 私有 IR、映射和混淆报告有意保留原名。原始 JSON 和日志留在忽略目录；公开摘要移除开发者根路径。
 任何原始证据入公开仓库前均须审阅。
+
+## 相对速度与预算门槛
+
+原生 Windows 的 `tools/measure_windows.py` 支持采样前声明启动、策略循环和整包体积预算，
+命令见 [Windows 测量指南](windows.zh-CN.md)。超限时保留实测结果并返回非零，功能通过不能覆盖预算失败。
+
+独立保护 skill 的 `scripts/measure.py` 也支持工作负载清单中的可选 `comparisons`：
+
+```json
+{"reference": "baseline", "target": "protected", "max_slowdown": 1.25, "max_size_ratio": 2.0}
+```
+
+将上述对象放入清单顶层 `comparisons` 数组；两端均须是现有 profile 名称。
+配置示例和完整格式见[英文操作参考](protection-skill/references/operations.md)。
+轮次间轮换配置顺序，保留每次耗时并在测量后核对声明产物的大小及 SHA-256。
+体积门槛必须有明确的两组产物和有效参考大小；失败或缺少参考值不能算预算通过。
+相对速度是时间比率的倒数：耗时翻倍意味着保留 50% 速度，不是减去“100% 开销”。
+这里的通用测量是进程墙钟时间，不应与 Windows 策略循环的内部耗时混为一谈。

@@ -67,6 +67,12 @@ python tools/measure_windows.py `
 以及新进程输出一次警告的耗时。警告包含加载与 I/O，不是纯加密吞吐量。
 摘要包含中位数、最小/最大值、最近秩 p95 和总体标准差。不要与 REA 分析同时采样，不删除慢样本；重复运行用新目录。
 
+可在采样前声明预算，例如增加 `--max-bench-slowdown 1.25 --max-startup-slowdown 1.5 --max-package-ratio 2`。
+工具报告 `protected / baseline` 比率及相对速度 `100 * baseline时间 / protected时间`；
+1.25 倍耗时对应 80% 相对速度。上述数字仅为配置示例，不是默认限制。
+超过任一预算返回 1，执行或输入错误返回 2；缺少有效参考值的预算检查标为 incomplete，不能通过。
+不传预算参数保持原有测量行为。完整报告保留预算、原始样本和失败结果。
+
 比较使用相同 Release 优化、CRT 及 `/DEBUG:FULL /OPT:REF /OPT:ICF /INCREMENTAL:NO`，
 仅保护 OFF/ON，xollvm 为 `NONE`，不声称 PE 存在单独的 ELF 式 stripped 配置。
 实测与限制见[验证记录](windows-validation.zh-CN.md)。

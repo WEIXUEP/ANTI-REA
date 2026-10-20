@@ -87,7 +87,12 @@ the original sensitive corpus and required public names. Existing audit reports
 or native tools can establish the comparison; name any unchecked channels.
 
 Use `scripts/measure.py` only with reviewed command manifests and authorized
-workloads. It records timings, dispersion, output hashes and sizes; it is not a
+workloads. It rotates profile order, records raw times, dispersion, output hashes
+and sizes, and verifies declared artifact hashes after execution. Optional
+`comparisons` in the manifest declare `max_slowdown` and `max_size_ratio` gates;
+choose them before sampling. Relative speed is the inverse of the time ratio,
+not one minus the percentage overhead. Failed workloads or unavailable reference
+sizes cannot pass a requested gate. It is not a
 correctness oracle or proof that xollvm ran.
 Report implemented controls, actual artifacts and checks, residual exposures,
 unsupported platforms and pending performance decisions. Distinguish encryption,

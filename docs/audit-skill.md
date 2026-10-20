@@ -34,6 +34,14 @@ Paths are always checked; specified function and variable names default to empty
 Use `--all-strings` for a private global string inventory. Baselines and reports
 contain sensitive evidence and must not be installed with the application.
 
+Select numeric bytes with repeatable specifications, for example
+`--constant u32le:0x5a827999 --constant f64be:0.125`. Unsigned 32/64-bit integers
+and IEEE-754 binary32/binary64 floats support explicit little/big byte order.
+Exact file offsets are recorded; specifications participate in baseline scope
+checks and `--fail-on-deny`. A hit proves bytes, not their computational role.
+Review callers, shared tables and references beyond the virtualized function.
+See [reference review and Windows checks](reference-improvements.md).
+
 ## Agent Request
 
 ```text

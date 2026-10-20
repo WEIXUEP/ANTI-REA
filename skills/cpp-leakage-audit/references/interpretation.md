@@ -8,6 +8,7 @@ Recommend scoped remedies; do not perform them during a read-only audit.
 | Path/source basename | Runtime location, compiler source unit or debug record | Location IDs, prefix mapping, separate debug files; inspect each channel separately |
 | Internal RTTI name after strip | ABI type-name initializer | ABI-aware opaque names; require casts/equality/exceptions across libraries |
 | Function/global symbol | Static or dynamic symbol table | Strip release copies or restrict exports only after public ABI review |
+| Selected numeric bytes | Instruction immediate, global table, asset or incidental bytes | Confirm the owning region and references; inspect callers and shared data before selecting protection |
 | PDB path | PE CodeView record | Basename-only reference and private PDB retention |
 | Build library path | ELF RPATH/RUNPATH | Relative installed loader policy plus relocation test |
 | Resource name or content | Runtime locator, text asset or embedded resource | Aliases/relative lookup; naming protection does not encrypt contents |
@@ -19,6 +20,9 @@ Path and RTTI regex hits are candidates until context supports the interpretatio
 Encrypted Base64 can look like a slash path; review the containing record and
 offset. Do not suppress all ciphertext-looking text. Public imports and exported
 API names may be necessary; mark them intentional with a narrow rationale.
+Numeric matches and crypto-looking tables do not establish an algorithm: a
+protector can insert decoys. Trace relevant data/control paths, preserve unknown
+reachability and corroborate semantics independently when execution is authorized.
 
 Local-variable labels invented by a decompiler are not necessarily source names.
 Stripping removes selected metadata, not strings needed at runtime. Opaque RTTI

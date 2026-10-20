@@ -81,6 +81,7 @@ nav:
       - 检测 Skill 使用指南: audit-skill.zh-CN.md
       - 保护 Skill 使用指南: using-protection-skill.zh-CN.md
       - Windows 验证记录: windows-validation.zh-CN.md
+      - 参考项目与能力改进: reference-improvements.zh-CN.md
       - 测量方法: measurement.zh-CN.md
       - 实测结果: comparison.zh-CN.md
       - 剩余暴露: remaining-exposure.zh-CN.md
@@ -116,6 +117,7 @@ nav:
       - Windows Validation: protection-skill/references/windows.md
   - Evidence:
       - Windows Native Results: windows-validation.md
+      - Reference Review and Improvements: reference-improvements.md
       - Measurement Tools: measurement.md
       - Measured Results: comparison.md
       - Remaining Exposure: remaining-exposure.md

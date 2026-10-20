@@ -15,6 +15,7 @@
 | 了解保护目标 | [威胁模型](threat-model.zh-CN.md)、[场景目录](scenarios.zh-CN.md) |
 | 恢复加密警告 | [诊断与恢复](diagnostics.zh-CN.md) |
 | 比较三种发布版本 | [测量方法](measurement.zh-CN.md) |
+| 查看数值泄露与性能预算改进 | [参考项目评估](reference-improvements.zh-CN.md) |
 | 检测其他 C++ 项目 | [检测 skill](audit-skill.zh-CN.md) |
 | 接入保护、密钥和恢复 | [保护 skill](using-protection-skill.zh-CN.md) |
 | 部署文档 | [GitHub Pages](github-pages.zh-CN.md) |

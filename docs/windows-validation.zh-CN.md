@@ -425,3 +425,10 @@ VM 包装均保留 `0x215a827999`、`7` 和解释器调用。Hex-Rays 在这个�
 
 原始响应、stderr、逐轮时间和资源、脚本快照及 `summary.json` 留在私有
 `build/backend-comparison/20261020-r001/`，不随文档或 skill ZIP 发布。
+
+## 数值泄露与预算门槛补充验证（2026-10-20）
+
+参考仓库评估后，已增加显式数值常量扫描、Windows 性能预算和独立测量 skill 的轮换采样、
+体积预算及产物前后哈希检查。使用保留的原生 demo 完成了正反对照和独立 ZIP 验证；
+选定常量仍可见、MIXED_VM 的策略循环超出 2 倍预算，工具均正确返回失败。
+详见[改进内容、来源与实测](reference-improvements.zh-CN.md)，不涉及真实 Palace。

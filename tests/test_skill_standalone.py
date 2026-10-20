@@ -201,6 +201,26 @@ class StandaloneSkillTests(unittest.TestCase):
         config.write_text(json.dumps(dict(schema=1, profiles=profiles)))
         self.assertEqual(self.run_tool("measure.py", *args, no_site=True).returncode, 1)
 
+    def test_downloaded_constant_scanner_and_budget_exit_codes(self):
+        artifact = self.root / "constant.bin"
+        artifact.write_bytes(bytes.fromhex("9979825a"))
+        run = self.run_tool("audit.py", "--binary", artifact, "--constant", "u32le:0x5a827999",
+                            "--fail-on-deny", "--out", self.root / "constant-scan", no_site=True)
+        self.assertEqual(run.returncode, 1, run.stderr)
+        profiles = [dict(name=name, command=[sys.executable, "-c", "print(42)"], artifacts=[artifact.name])
+                    for name in ("baseline", "protected")]
+        config = self.root / "budget.json"
+        config.write_text(json.dumps(dict(schema=1, profiles=profiles, comparisons=[
+            dict(reference="baseline", target="protected", max_size_ratio=0.5)])))
+        output = self.root / "budget-result"
+        result = self.run_tool("measure.py", "--config", config, "--samples", "3", "--warmups", "0",
+                               "--out", output, no_site=True)
+        self.assertEqual(result.returncode, 1, result.stderr)
+        report = json.loads(output.with_suffix(".json").read_text())
+        self.assertTrue(all(row["status"] == "passed" for row in report["profiles"]))
+        self.assertEqual(report["comparisons"][0]["status"], "failed")
+        self.assertEqual(self.run_tool("measure.py", "--config", config, "--out", config, no_site=True).returncode, 2)
+
     def test_measurement_validates_all_profiles_before_execution(self):
         marker = self.root / "must-not-exist"
         profiles = [dict(name="first", command=[sys.executable, "-c",

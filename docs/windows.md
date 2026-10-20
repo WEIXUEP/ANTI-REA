@@ -114,6 +114,15 @@ optimization, CRT and `/DEBUG:FULL /OPT:REF /OPT:ICF /INCREMENTAL:NO` flags.
 There is no claim that a separate ELF-style stripped profile exists on PE.
 See [native results](windows-validation.md) for measurements and limitations.
 
+Declare budgets before sampling with, for example,
+`--max-bench-slowdown 1.25 --max-startup-slowdown 1.5 --max-package-ratio 2`.
+The report records protected/baseline ratios and relative speed as
+`100 * baseline time / protected time`: 1.25x time means 80% relative speed.
+These values are examples, not defaults. Exceeded limits return exit 1;
+execution/input errors return 2. Missing valid reference values make a requested
+check incomplete and cannot pass. Omitting budgets preserves ordinary measurement
+behavior. Raw samples, limits and failed checks remain in the private report.
+
 ## MSVC RTTI Contract
 
 Itanium `_ZTS` records are not MSVC RTTI records. The Windows transformer recognizes

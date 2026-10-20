@@ -109,6 +109,9 @@ After authorized builds and release staging, write a trusted workload manifest:
      "artifacts": ["stripped/bin/engine", "stripped/lib/engine.so"]},
     {"name": "protected", "command": ["./protected/bin/engine", "test-input.dat"],
      "artifacts": ["protected/bin/engine", "protected/lib/engine.so"]}
+  ],
+  "comparisons": [
+    {"reference": "baseline", "target": "protected", "max_slowdown": 1.25, "max_size_ratio": 2.0}
   ]
 }
 ```
@@ -124,18 +127,34 @@ Relative `cwd` and artifact paths are anchored to the manifest's directory;
 relative command paths follow the selected `cwd`. Use `.exe`/`.dll` for Windows.
 Do not put secret arguments in the manifest; commands are recorded in reports.
 
-Reports contain per-profile process wall time (median/min/max/population standard
-deviation), sample counts, output hashes and artifact sizes/hashes. Raw program
+Reports contain per-profile raw process wall times, median/min/max/p95/population
+standard deviation, sample counts, output hashes and artifact sizes/hashes. Profile
+order rotates between rounds. Declared artifact hashes and sizes are rechecked
+after all measurements; changed or missing files fail the profile. Raw program
 stdout/stderr is not copied to reports. Use `expected_stdout_sha256` per profile
 when stable output has an independently known reference. Nonzero exits, timeouts
-and expected-output mismatch fail the profile. Varying output hashes are visible
+and expected-output mismatch, including warmups, fail the profile. Varying output hashes are visible
 but are not automatically failures unless a reference hash was specified.
+
+`comparisons` is optional; omitted limits impose no implicit performance policy.
+Each pair names distinct existing profiles. Limits must be finite positive
+ratios; unknown fields and invalid references are rejected before any command
+runs. `slowdown = target median / reference median` and
+`relative_speed_percent = 100 * reference median / target median`, so 2x time
+means 50% relative speed, while 1.25x time means 80%. The example limits are
+illustrations, not default budgets. A size gate needs declared artifacts in both
+profiles and a positive reference size. Failed profiles and unavailable
+references make comparisons incomplete, never passing. Exceeded limits return
+exit 1 even when every workload exits successfully. Reports retain the limits,
+observed ratios and each check. Output files cannot overwrite the manifest or
+declared artifacts. Keep each run's output prefix separate to preserve evidence.
 
 Keep inputs, compiler optimization and dependency configuration equivalent.
 Separate clean-build, startup and representative repeated-workload experiments;
 a whole-process measurement is not kernel time. A clean-build command can be a
 separately labelled profile, but rebuild state must be reset safely between
-samples. Do not automatically delete a build tree. Run functional and numerical
+samples. Do not declare expected-to-change build outputs as immutable artifacts
+in a clean-build experiment. Do not automatically delete a build tree. Run functional and numerical
 tests separately, and compare observed overhead against the user's budget.
 
 ## Exit Status and Delivery Contract
@@ -145,7 +164,7 @@ tests separately, and compare observed overhead against the user's budget.
 | Key generator | New private bundle persisted | Not used | Dependency, destination or write failure |
 | Decoder | Inventory or all recognized events recovered | One or more recognized events failed | Setup/input failure or no supported events |
 | Doctor | Inventory and requested capability requirements passed | A requested capability is unavailable/unverified | Invalid arguments |
-| Measurement | All workloads passed the configured checks | A workload timed out, failed or mismatched reference output | Invalid configuration or unreadable artifacts/commands |
+| Measurement | Workloads and requested comparisons passed | Workload/output/integrity failure, exceeded budget or incomplete comparison | Invalid configuration or unreadable artifacts/commands |
 
 The tools do not rewrite C++ macros, install a compiler, strip files in place,
 rename arbitrary binary bytes or perform universal RTTI transformation.

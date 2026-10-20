@@ -89,6 +89,31 @@ def observe(executable, mode, protected, cwd, reference=None):
     return observed
 
 
+def compare_cost(profiles, limits):
+    baseline, protected = profiles["baseline"], profiles["protected"]
+    metrics = {name: (baseline[name], protected[name]) for name in ("core_bytes", "package_bytes", "build_seconds")}
+    for mode, field in (("startup", "process_wall_seconds"), ("bench", "inner_seconds"), ("warning", "process_wall_seconds")):
+        metrics[mode] = tuple(profiles[name]["workloads"][mode][field]["median"] for name in ("baseline", "protected"))
+    differences = {}
+    for name, (before, after) in metrics.items():
+        if not all(math.isfinite(value) and value >= 0 for value in (before, after)):
+            raise ValueError("Invalid cost metric: " + name)
+        differences[name] = dict(delta=after - before, percent=100 * (after - before) / before if before else None,
+                                 ratio=after / before if before else None)
+        if name in {"startup", "bench", "warning"}:
+            if not before or not after:
+                differences[name]["ratio"] = None
+            differences[name]["relative_speed_percent"] = 100 * before / after if before and after else None
+    checks = []
+    for name, limit in limits.items():
+        if name not in {"startup", "bench", "package_bytes"} or type(limit) not in (int, float) or not math.isfinite(limit) or limit <= 0:
+            raise ValueError("Invalid performance budget")
+        ratio = differences[name]["ratio"]
+        checks.append(dict(metric=name, maximum_ratio=limit, observed_ratio=ratio,
+                           status="incomplete" if ratio is None else "passed" if ratio <= limit else "failed"))
+    return differences, checks
+
+
 def render(report):
     lines = ["# Native Windows Protection Cost", "", "| Profile | Build (s) | EXE + DLL bytes | Package bytes | Startup (ms) | Policy loop (ms) | Warning process (ms) |",
              "| --- | ---: | ---: | ---: | ---: | ---: | ---: |"]
@@ -105,6 +130,18 @@ def render(report):
         for mode, workload in row["workloads"].items():
             metric = workload["process_wall_seconds"]
             lines.append(f"| {name} | {mode} | {metric['p95'] * 1000:.3f} | {metric['maximum'] * 1000:.3f} |")
+    lines.extend(["", "## Relative Cost and Budgets", "",
+                  "Status: " + report["status"], "",
+                  "Relative speed = 100 * baseline median / protected median for the same workload.", "",
+                  "| Metric | Protected / baseline | Relative speed | Maximum ratio | Gate |",
+                  "| --- | ---: | ---: | ---: | --- |"])
+    checks = {row["metric"]: row for row in report["budget_checks"]}
+    for name, values in report["differences"].items():
+        ratio = f"{values['ratio']:.3f}" if values["ratio"] is not None else "N/A"
+        speed = f"{values['relative_speed_percent']:.2f}%" if values.get("relative_speed_percent") is not None else "N/A"
+        check = checks.get(name)
+        limit = str(check["maximum_ratio"]) if check else "None"
+        lines.append(f"| {name} | {ratio} | {speed} | {limit} | {check['status'] if check else 'Not requested'} |")
     lines.extend(["", "## Limits", "", *["- " + item for item in report["limitations"]], ""])
     return "\n".join(lines)
 
@@ -114,10 +151,17 @@ def main(argv=None):
     parser.add_argument("--acceptance", type=Path, required=True, help="Private result.json from validate_windows.py")
     parser.add_argument("--samples", type=int, default=31)
     parser.add_argument("--warmups", type=int, default=5)
+    parser.add_argument("--max-bench-slowdown", type=float, help="Maximum protected / baseline inner policy-loop median")
+    parser.add_argument("--max-startup-slowdown", type=float, help="Maximum protected / baseline startup process-wall median")
+    parser.add_argument("--max-package-ratio", type=float, help="Maximum protected / baseline staged package bytes")
     parser.add_argument("--out", type=Path, required=True, help="New private evidence directory")
     args = parser.parse_args(argv)
     if os.name != "nt" or args.samples < 3 or args.warmups < 0:
         parser.error("Use native Windows, at least three samples and nonnegative warmups")
+    limits = {name: value for name, value in (("bench", args.max_bench_slowdown),
+              ("startup", args.max_startup_slowdown), ("package_bytes", args.max_package_ratio)) if value is not None}
+    if any(not math.isfinite(value) or value <= 0 for value in limits.values()):
+        parser.error("Performance budgets must be finite positive ratios")
     output = args.out.resolve()
     try:
         if output.exists():
@@ -129,7 +173,7 @@ def main(argv=None):
         report = dict(schema=1, status="running", started=datetime.now(timezone.utc).isoformat(),
                       acceptance_sha256=digest(acceptance), acceptance=str(acceptance),
                       tool_sha256=digest(Path(__file__)), platform=platform.platform(), processor=platform.processor(),
-                      compiler=result["compiler"], samples=args.samples, warmups=args.warmups, profiles=profiles,
+                      compiler=result["compiler"], samples=args.samples, warmups=args.warmups, profiles=profiles, limits=limits,
                       limitations=[
                           "Demo only; protected obfuscation " + profiles["protected"]["obfuscation"] + "; not Palace or whole-application performance.",
                           "Build timing is one initial compile/link observation, excluding configure/tests/install; caches were not flushed.",
@@ -166,17 +210,13 @@ def main(argv=None):
             if digest(acceptance) != report["acceptance_sha256"]:
                 raise ValueError("Acceptance evidence changed during measurement")
             prepare(acceptance, output)
-            baseline, protected = profiles["baseline"], profiles["protected"]
-            metrics = {name: (baseline[name], protected[name]) for name in ("core_bytes", "package_bytes", "build_seconds")}
-            for mode, field in (("startup", "process_wall_seconds"), ("bench", "inner_seconds"), ("warning", "process_wall_seconds")):
-                metrics[mode] = tuple(profiles[name]["workloads"][mode][field]["median"] for name in profiles)
-            report["differences"] = {name: dict(delta=b - a, percent=100 * (b - a) / a if a else None)
-                                     for name, (a, b) in metrics.items()}
-            report.update(status="passed", completed=datetime.now(timezone.utc).isoformat())
+            report["differences"], report["budget_checks"] = compare_cost(profiles, limits)
+            accepted = all(row["status"] == "passed" for row in report["budget_checks"])
+            report.update(status="passed" if accepted else "failed", completed=datetime.now(timezone.utc).isoformat())
             save()
             (output / "summary.md").write_text(render(report), encoding="utf-8")
             print(json.dumps(dict(status=report["status"], result=str(output / "result.json"))))
-            return 0
+            return 0 if accepted else 1
         except Exception as error:
             report.update(status="failed", error=str(error))
             save()
