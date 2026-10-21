@@ -14,6 +14,10 @@ Verify the scanner and the scope, not only a successful exit status.
   inventory completion, not a promise of no leakage.
 - Compare provided rebuilt artifacts using the original immutable baseline.
   Verify corpus/scope changes fail rather than produce an improvement claim.
+- For common-word function/type aliases, preserve original-name positive controls
+  per channel. Separate COFF/PDB changes, linked RTTI and final exports; report new
+  alias exports and addresses even when original findings resolve. A private map
+  entry or decompiler label alone is not evidence of an alias in the release.
 - Review candidate paths, required imports, public exceptions and opaque payload
   context manually. Keep explicit reasons; do not hide whole finding categories.
 - Extract this skill ZIP alone and run `scripts/audit.py --help` and a synthetic

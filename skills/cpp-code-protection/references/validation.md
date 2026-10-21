@@ -48,6 +48,12 @@ missing translation units or skipped required passes leave the corresponding
 protection unverified even if compilation succeeds. Keep unrelated types and
 required public exports functional. Report unsupported layouts explicitly.
 
+For optional common-word names, use the per-channel gates in
+[name-styles.md](name-styles.md). Validate actual final-PE alias visibility
+separately from COFF renaming and map contents. Additional alias exports expose
+addresses and need their own recorded selection. Preserve the original sensitive
+corpus; do not count stripped private names as resolved original export leaks.
+
 ## Test Semantics and Recovery
 
 - Exercise normal computation with an independent reference where practical.
@@ -65,6 +71,9 @@ required public exports functional. Report unsupported layouts explicitly.
 - For sealed diagnostics, recover both template and dynamic fields, resolve the
   matching source map, and reject wrong keys, damaged payloads and mismatched
   release maps. Repeated logical sites need unambiguous location handling.
+- For name aliases, recover emitted RTTI and exact function aliases from the
+  matching release maps with the independently extracted skill. Map-only lookup
+  must work without PyNaCl; the diagnostic private key is not needed for it.
 - Check resource lookup and execution after copying the entire installed package
   to a new location. Inventory nonbinary assets too: aliases do not encrypt their
   contents. Private keys, IR, maps and debug files must stay outside that package.

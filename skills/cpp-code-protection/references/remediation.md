@@ -6,6 +6,7 @@
 | Full signature or source path | `__FILE__`, `__FUNCSIG__`, `source_location` | Protected location interface and prefix mapping | Decode/map correctness and binary inspection |
 | Internal type names after strip | Runtime RTTI initializers | ABI-aware opaque-name generation, consistent keys across consumers | Casts, equality, inheritance and cross-library exceptions |
 | Local function/global names | Static symbol table | Separate private debug artifacts and strip the release copy | Release functionality and symbol audit |
+| User-selected alternate internal labels | Owned RTTI and reviewed private function symbols | Optional common-word aliases; see [name-styles.md](name-styles.md); retain extra exports only when selected | Channel-specific original baseline, final alias visibility, ABI behavior and private-map recovery; model confusion remains a separate experiment |
 | Exported internal C++ names | Public/dynamic symbols | Tighten explicit exports/visibility only after ABI review | Existing client/plugin loading |
 | Source basenames with no directories | Debug records or compiler source-unit field | Remove private metadata and alias compilation-unit labels | File/symbol scan; retain internal debug artifacts separately |
 | PDB developer path | PE CodeView | PDB basename linker rule; private PDB retention | PE CodeView audit, package inventory |

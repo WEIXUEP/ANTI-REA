@@ -35,11 +35,15 @@ There are separate operations with different required inputs:
 | --- | --- | --- |
 | Sealed diagnostic recovery | Matching private key and supported ciphertext envelope | Template and captured dynamic fields |
 | Source location lookup | Matching release's private location map | Original file, line and logical diagnostic site |
-| Opaque RTTI lookup | Matching type maps, naming key identity and ABI | Original encoded name and readable type name |
+| Opaque/common-word RTTI lookup | Matching release's type maps and ABI | Original encoded name and readable type name |
+| Common-word function alias lookup | Matching release's symbol maps and exact replacement symbol | Original linker symbol and recorded readable name |
 
 A naming hash or opaque line identifier is not decrypted with a public-key
 private key. It is resolved through a map unless the actual scheme specifies
 otherwise. Likewise, a key file is not proof that a location map is loaded.
+The bundled `--symbol` and `--rtti` lookups need maps, not PyNaCl or private keys.
+Use `--symbol` for exact function aliases; never guess their original meaning from
+the common word. See [name-styles.md](name-styles.md) for actual producer scope.
 Report partial recovery explicitly: a message may be recovered while its
 location remains unresolved, or a location may be known without a payload key.
 

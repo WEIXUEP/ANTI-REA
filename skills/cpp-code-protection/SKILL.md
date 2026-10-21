@@ -1,6 +1,6 @@
 ---
 name: cpp-code-protection
-description: Guide and implement scoped C++ diagnostic encryption, opaque RTTI names, selected numeric masking, release stripping and selective obfuscation; validate behavior, recovery limits and performance with matched controls. Manage keys and offline recovery tools. Use for authorized protection changes, not read-only leakage detection.
+description: Guide and implement scoped C++ diagnostic encryption, opaque or common-word internal names, selected numeric masking, release stripping and selective obfuscation. Establish original-program baselines, validate behavior and recovery limits, and manage private keys/maps. Use for authorized protection changes, not read-only leakage detection.
 ---
 
 # C++ Code Protection
@@ -24,7 +24,7 @@ other producers before adapting them. A GUI is design guidance, not bundled UI.
 | --- | --- |
 | Check dependencies and LLVM/xollvm readiness | `scripts/doctor.py` |
 | Generate compatible private material | `scripts/generate_keys.py`; [key-management.md](references/key-management.md) |
-| Recover diagnostics, locations and RTTI | `scripts/decode.py`; [recovery-tools.md](references/recovery-tools.md) |
+| Recover diagnostics, locations, RTTI and function aliases | `scripts/decode.py`; [recovery-tools.md](references/recovery-tools.md) |
 | Implement diagnostics, RTTI, build and release protection | [integration.md](references/integration.md) |
 | Choose controls and function-level obfuscation | [remediation.md](references/remediation.md) |
 | Integrate selected constants and run matched-control acceptance | [runtime-constants.md](references/runtime-constants.md) |
@@ -35,8 +35,11 @@ other producers before adapting them. A GUI is design guidance, not bundled UI.
 
 ## Agree the Protection Contract
 
-Preserve an immutable original build, private debug material and evidence of
-known exposures. If original artifacts are missing, say improvement is unverified.
+Before changing protection, inspect the original program and preserve an immutable
+build, private debug material, artifact hashes and known-leaking positive controls.
+Record each name's channel: source, object/PDB, RTTI or final release export.
+A function present only in a private object is not a baseline PE export leak.
+If original artifacts are missing, say improvement is unverified.
 Use existing target audit tooling or native inspection; the separate
 `cpp-leakage-audit` skill is convenient but not required. This package does not
 bundle a scanner or claim automatic comprehensive audit coverage.
@@ -47,11 +50,13 @@ internal RTTI names, path/resource hygiene and private-artifact isolation.
 Keep OFF behavior reproducible. Explicit user choices override these defaults.
 Missing ABI/tool support is an unmet check, not permission to silently downgrade.
 
-When requested, offer common-word internal aliases as an explicit alternative
-to the existing naming policy. Read [name-styles.md](references/name-styles.md)
-for exact scope, recovery and optional Windows EXE labels. Retaining decoy
-exports reveals addresses and is OFF by default. Test model confusion
-separately; label replacement alone does not establish it.
+For a name-protection request, preserve any existing user choice; otherwise offer
+the existing OPAQUE policy and optional DECOY common-word aliases while proceeding
+with baseline collection. Keep OPAQUE as the default. Read
+[name-styles.md](references/name-styles.md) for selection, scope and acceptance.
+Treat retaining Windows EXE aliases as a separate user choice: it reveals addresses
+and is OFF by default. Choosing DECOY alone does not enable exports. Test model
+confusion separately; label replacement alone does not establish it.
 
 Do not enable maximum obfuscation globally. Select extra transforms/VM by function
 value, call frequency and an explicit cost budget. Leave numerical hotspots and

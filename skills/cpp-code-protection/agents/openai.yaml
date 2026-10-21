@@ -1,4 +1,4 @@
 interface:
   display_name: "C++ Code Protection"
-  short_description: "Implement scoped protection, keys and offline recovery"
-  default_prompt: "Use $cpp-code-protection to design and implement scoped protection for my C++ release while preserving behavior."
+  short_description: "Baseline C++ releases, choose controls and verify recovery"
+  default_prompt: "Use $cpp-code-protection to inspect my original C++ release, choose scoped protection and name styles, and validate behavior and private-map recovery."

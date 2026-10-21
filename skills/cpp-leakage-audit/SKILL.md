@@ -76,6 +76,12 @@ Read [interpretation.md](references/interpretation.md) to classify findings and
 recommend a mitigation without equating stripping with encryption.
 Preserve required imports and public exports; decompiler-generated variable
 labels are not evidence of recovered source names.
+When auditing renamed functions/classes, keep the original sensitive corpus and
+identify the actual channel for each original or replacement name. Follow
+[interpretation.md](references/interpretation.md) for per-channel comparison:
+COFF/PDB labels, runtime RTTI and PE exports establish different exposures.
+Report retained alias exports as additional address exposure even when original
+names disappear. Do not infer semantics or model confusion from plausible labels.
 
 ## Runtime and Comparison Boundaries
 
