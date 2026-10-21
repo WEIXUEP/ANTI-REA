@@ -7,6 +7,7 @@ import sys
 from .crypto import decode, generate_keys, load_keys
 from .generate import enabled, generate
 from .launcher import doctor, launch
+from .names import rtti_aliases
 
 
 def main(argv=None):
@@ -41,6 +42,7 @@ def main(argv=None):
     decoder.add_argument("--build", required=True)
     decoder.add_argument("--token")
     decoder.add_argument("--rtti")
+    decoder.add_argument("--symbol", help="Recover an exact DECOY function linker label")
     args = parser.parse_args(argv)
     try:
         if args.command == "keys":
@@ -55,11 +57,16 @@ def main(argv=None):
             query = args.rtti.removeprefix("class ").removeprefix("struct ")
             result = [row for path in (Path(args.build) / "private/maps").glob("*.json")
                       for row in json.loads(path.read_text()).get("rtti", [])
-                      if query in {row["opaque"], row["opaque"].removeprefix("65"), row["opaque"].removeprefix(".?AV").removesuffix("@@")}]
+                      if query in rtti_aliases(row["opaque"])]
             if not result:
                 raise ValueError("RTTI name not found in this build's maps")
+        elif args.symbol:
+            result = [row for path in (Path(args.build) / "private/maps").glob("*.json")
+                      for row in json.loads(path.read_text()).get("symbols", []) if row["replacement"] == args.symbol]
+            if not result:
+                raise ValueError("Function label not found in this build's maps")
         else:
-            parser.error("decode requires --token or --rtti")
+            parser.error("decode requires --token, --rtti or --symbol")
         print(json.dumps(result, indent=2))
         return 0
     except (ValueError, OSError, KeyError) as error:

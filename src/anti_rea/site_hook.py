@@ -32,6 +32,7 @@ SKILL_FILES = {
         "references/integration.md",
         "references/windows.md",
         "references/runtime-constants.md",
+        "references/name-styles.md",
         "scripts/generate_keys.py",
         "scripts/decode.py",
         "scripts/_recovery.py",

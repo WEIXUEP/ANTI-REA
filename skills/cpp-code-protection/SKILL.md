@@ -28,6 +28,7 @@ other producers before adapting them. A GUI is design guidance, not bundled UI.
 | Implement diagnostics, RTTI, build and release protection | [integration.md](references/integration.md) |
 | Choose controls and function-level obfuscation | [remediation.md](references/remediation.md) |
 | Integrate selected constants and run matched-control acceptance | [runtime-constants.md](references/runtime-constants.md) |
+| Select common-word function/type aliases and release visibility | [name-styles.md](references/name-styles.md) |
 | Test semantics, selection and fresh release artifacts | [validation.md](references/validation.md) |
 | Handle clang-cl/MSVC ABI and private PDBs | [windows.md](references/windows.md) |
 | Compare trusted target workloads | `scripts/measure.py` |
@@ -45,6 +46,12 @@ baseline information protection: sealed diagnostics, opaque source locations and
 internal RTTI names, path/resource hygiene and private-artifact isolation.
 Keep OFF behavior reproducible. Explicit user choices override these defaults.
 Missing ABI/tool support is an unmet check, not permission to silently downgrade.
+
+When requested, offer common-word internal aliases as an explicit alternative
+to the existing naming policy. Read [name-styles.md](references/name-styles.md)
+for exact scope, recovery and optional Windows EXE labels. Retaining decoy
+exports reveals addresses and is OFF by default. Test model confusion
+separately; label replacement alone does not establish it.
 
 Do not enable maximum obfuscation globally. Select extra transforms/VM by function
 value, call frequency and an explicit cost budget. Leave numerical hotspots and

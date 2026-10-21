@@ -32,6 +32,11 @@ known-corpus recovery test, not blinded algorithm recovery or devirtualization;
 the bundled exact-byte scanner does not perform that reconstruction automatically.
 
 Local-variable labels invented by a decompiler are not necessarily source names.
+Common-code function/class labels may also be deliberate replacements. Confirm
+the actual channel (RTTI, PE export, COFF/PDB or analyst-invented label), then
+derive semantics from behavior and references. Do not infer implementation from
+words such as `read_buffer` or `CacheEntry` alone. Extra decoy exports can reveal
+function addresses even when original names disappear; report that tradeoff.
 Stripping removes selected metadata, not strings needed at runtime. Opaque RTTI
 does not conceal inheritance, vtables or function bodies. Runtime-decrypted
 strings can be observed in memory. Public-key sealed diagnostics can keep private

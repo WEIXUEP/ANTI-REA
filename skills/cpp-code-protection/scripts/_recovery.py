@@ -11,7 +11,7 @@ import string
 MAX_INPUT = 8 * 1024 * 1024
 MAX_MAP = 16 * 1024 * 1024
 TOKEN = re.compile(r"(?<![\w])AR\d+:[^:\s]+:[^\s]+")
-RTTI = re.compile(r"(?<![\w])(?:\*?65R[a-f0-9]{64}|\.\?AVR_[a-f0-9]{64}@@)(?![\w])")
+RTTI = re.compile(r"(?<![\w])(?:\*?(?:65R|\d+[A-Za-z]+_)[a-f0-9]{64}|\.\?AV(?:R_|[A-Za-z]+_)[a-f0-9]{64}@@)(?![\w])")
 
 
 class RecoveryError(ValueError):
@@ -107,6 +107,11 @@ def load_maps(build=None, maps=()):
                         or type(row.get("protected")) is not bool):
                     raise RecoveryError("invalid_rtti_record")
             kind, count = "rtti", sum(row["protected"] for row in book["rtti"])
+            if not isinstance(book.get("symbols", []), list):
+                raise RecoveryError("invalid_symbol_map")
+            for row in book.get("symbols", []):
+                if not isinstance(row, dict) or not all(isinstance(row.get(field), str) for field in ("original", "decoded", "replacement")):
+                    raise RecoveryError("invalid_symbol_record")
         else:
             raise RecoveryError("unsupported_map_format")
         books.append((path, book))
@@ -177,8 +182,20 @@ def decode_token(token, key, books):
 
 def aliases(name):
     normalized = name.lstrip("*")
-    return {name, normalized, normalized.removeprefix("65"),
-            normalized.removeprefix(".?AV").removesuffix("@@")}
+    result = {name, normalized, normalized.removeprefix(".?AV").removesuffix("@@")}
+    sized = re.fullmatch(r"(\d+)([A-Za-z_][A-Za-z_0-9]*)", normalized)
+    if sized and int(sized[1]) == len(sized[2]):
+        result.add(sized[2])
+    return result
+
+
+def decode_symbol(query, books):
+    matches = [(path, row) for path, book in books for row in book.get("symbols", []) if row["replacement"] == query]
+    if not matches:
+        raise RecoveryError("symbol_not_found")
+    if len({(row["original"], row["decoded"]) for _, row in matches}) != 1:
+        raise RecoveryError("ambiguous_symbol")
+    return dict(kind="symbol", **matches[0][1], maps=[str(path) for path, _ in matches])
 
 
 def decode_rtti(query, books):

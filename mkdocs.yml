@@ -76,6 +76,7 @@ nav:
       - 泄露场景: scenarios.zh-CN.md
       - 诊断与恢复: diagnostics.zh-CN.md
       - 构建与集成: integration.zh-CN.md
+      - 可选名称混淆: name-styles.zh-CN.md
       - xollvm 与函数选择: xollvm.zh-CN.md
       - Windows 构建: windows.zh-CN.md
       - 检测 Skill 使用指南: audit-skill.zh-CN.md
@@ -94,6 +95,7 @@ nav:
   - Protection:
       - Diagnostics and Recovery: diagnostics.md
       - Build and Integration: integration.md
+      - Optional Name Styles: name-styles.md
       - xollvm and Function Selection: xollvm.md
       - Windows: windows.md
   - Leakage Detection Skill:
@@ -114,6 +116,7 @@ nav:
       - Protection Integration: protection-skill/references/integration.md
       - Remediation Policy: protection-skill/references/remediation.md
       - Runtime Constants and Controls: protection-skill/references/runtime-constants.md
+      - Optional Name Styles: protection-skill/references/name-styles.md
       - Validation Guide: protection-skill/references/validation.md
       - Recovery Tool Design: protection-skill/references/recovery-tools.md
       - Key Generation and Lifecycle: protection-skill/references/key-management.md

@@ -87,6 +87,13 @@ python tools/measure.py
 
 `ANTI_REA_OBFUSCATION=NONE|LIGHT|MEDIUM|HEAVY|MIXED_VM` 独立选择混淆。启用前阅读 [xollvm 接入](docs/xollvm.zh-CN.md)。本项目不会自动下载或替换编译器。
 
+## 可选名称混淆
+
+`ANTI_REA_NAME_STYLE=OPAQUE|DECOY` 可选择原有策略或常见功能词替代名，处理显式选定的
+内部函数及 RTTI 类型。Windows 可另选 `ANTI_REA_RETAIN_DECOY_EXPORTS=ON`，将指定替代名
+保留为 EXE 导出；默认 OFF，因为它会额外暴露函数地址。范围、恢复和大模型误判假设的边界见
+[名称模式](docs/name-styles.zh-CN.md)。
+
 ## 恢复示例警告
 
 警告包含 `Payload: AR1:<key-id>:<base64>`，传入完整 token：

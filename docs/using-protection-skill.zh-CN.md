@@ -68,6 +68,11 @@ NONE 下掩码增加 2.36% 循环时间；MIXED_VM 下相对同级对照增加 5
 
 ## 规范说明
 
+[可选名称模式](name-styles.zh-CN.md) 新增常见功能词函数/类型替代名及私有映射，
+保留原有不透明模式作为默认。Windows 可显式保留指定 EXE 导出替代名，
+但会额外暴露地址，因此默认关闭。Skill 包含[已验证的接入与恢复规则（英文）](protection-skill/references/name-styles.md)。
+目前不宣称已证明大模型会误判。
+
 - [Skill 说明（英文）](protection-skill/index.md)
 - [独立操作（英文）](protection-skill/references/operations.md)
 - [接入契约（英文）](protection-skill/references/integration.md)

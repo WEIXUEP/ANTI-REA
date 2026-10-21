@@ -1,0 +1,9 @@
+{
+  "schema": 1,
+  "functions": [
+    {"name": "policy_dispatch(unsigned int)", "itanium": "_Z15policy_dispatchj", "msvc": "?policy_dispatch@@YAII@Z"},
+    {"name": "policy_token(unsigned int)", "itanium": "_Z12policy_tokenj", "msvc": "?policy_token@@YAII@Z"},
+    {"name": "print_rtti()", "itanium": "_Z10print_rttiv", "msvc": "?print_rtti@@YAXXZ"},
+    {"name": "peer_type(unsigned int)", "itanium": "_Z9peer_typej", "msvc": "?peer_type@@YAAEBVtype_info@@I@Z"}
+  ]
+}

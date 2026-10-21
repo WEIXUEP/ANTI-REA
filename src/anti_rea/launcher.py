@@ -11,6 +11,7 @@ import subprocess
 from .crypto import load_keys, write_private
 from .generate import enabled
 from .ir import transform
+from .names import load_policy, rename_functions, STYLES
 
 XOLLVM_VERSION = "v0.11.1"
 XOLLVM_COMMIT = "eb0850bd7cc87f551ad2948826605e518f5b8aa2"
@@ -159,13 +160,20 @@ def launch(argv):
     parser = argparse.ArgumentParser()
     for name in ("build", "keys", "opt", "plugin", "level", "protected"):
         parser.add_argument("--" + name, required=name not in {"plugin"}, default="")
+    parser.add_argument("--name-style", choices=STYLES, default="OPAQUE")
+    parser.add_argument("--name-policy", type=Path)
+    parser.add_argument("--retain-decoy-exports", choices=["ON", "OFF"], default="OFF")
     parser.add_argument("command", nargs=argparse.REMAINDER)
     args = parser.parse_args(argv)
     command = args.command[1:] if args.command[:1] == ["--"] else args.command
     if not command:
         raise ValueError("Missing compiler command")
+    if args.name_style == "DECOY" and (not enabled(args.protected) or not args.name_policy):
+        raise ValueError("DECOY names require protection ON and an explicit function-name policy")
     compiler = Path(os.path.abspath(command[0]))
     msvc = "clang-cl" in compiler.name.lower()
+    if enabled(args.retain_decoy_exports) and (args.name_style != "DECOY" or not msvc):
+        raise ValueError("Retained decoy exports require clang-cl and DECOY naming")
     arguments = expand_response(command[1:], msvc)
     source, output, flags = split_compile(arguments, msvc)
     build = Path(args.build)
@@ -189,13 +197,14 @@ def launch(argv):
             if not alternate and not (msvc and os.name == "nt"):
                 raise ValueError("Install llvm-undname (Windows) or c++filt (Linux) for RTTI selection")
             demangler = Path(alternate) if alternate else None
-        ir, rows = transform(ir, keys["master"], demangler, msvc)
+        ir, rows = transform(ir, keys["master"], demangler, msvc, name_style=args.name_style)
     transformed.write_text(ir, encoding="utf-8")
     run([args.opt, "-passes=verify", "-disable-output", transformed])
     current = transformed
     report = dict(schema=1, source=Path(source).name, object=str(Path(output).resolve().relative_to(build.resolve())),
                   abi="msvc" if msvc else "itanium",
-                  level=args.level, rtti=rows, xollvm="Not run")
+                  level=args.level, name_style=args.name_style, retained_decoy_exports=enabled(args.retain_decoy_exports),
+                  rtti=rows, symbols=[], xollvm="Not run")
     if args.level != "NONE":
         command = [args.opt]
         if args.plugin:
@@ -215,7 +224,11 @@ def launch(argv):
     run([args.opt, "-passes=strip,verify", "-S", current, "-o", native])
     native_ir = native.read_text()
     native_ir = re.sub(r'^source_filename = .*$', 'source_filename = "unit-' + identity + '"', native_ir, flags=re.M)
+    if args.name_style == "DECOY":
+        native_ir, report["symbols"] = rename_functions(native_ir, keys["master"], load_policy(args.name_policy, msvc),
+                                                       enabled(args.retain_decoy_exports))
     native.write_text(native_ir)
+    run([args.opt, "-passes=verify", "-disable-output", native])
     if msvc:
         backend = [flag for flag in flags if re.match(r"^[-/](?:O[012dx]|MDd?$|MTd?$|arch:|fp:)", flag, re.I)]
         run([compiler, *backend, "/c", "/clang:-x", "/clang:ir", native, "/Fo" + output])

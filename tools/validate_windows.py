@@ -15,6 +15,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 from anti_rea.crypto import generate_keys, load_keys
 from anti_rea.launcher import validate_obfuscation
+from anti_rea.names import load_policy
 
 
 def require(ok, message):
@@ -48,11 +49,15 @@ def main(argv=None):
     parser.add_argument("--jobs", type=int, default=8)
     parser.add_argument("--constants", choices=["ON", "OFF"], default="ON",
                         help="Selected policy-constant masking in protected configurations")
+    parser.add_argument("--name-style", choices=["OPAQUE", "DECOY"], default="OPAQUE")
+    parser.add_argument("--retain-decoy-exports", choices=["ON", "OFF"], default="OFF")
     parser.add_argument("--obfuscation", default="NONE",
                         choices=["NONE", "LIGHT", "MEDIUM", "HEAVY", "MIXED_VM"],
                         help="Protected configurations only; original baseline always uses NONE")
     parser.add_argument("--out", type=Path, help="New evidence directory; never reuse an old acceptance run")
     args = parser.parse_args(argv)
+    if args.retain_decoy_exports == "ON" and args.name_style != "DECOY":
+        parser.error("Retained decoy exports require --name-style DECOY")
     if os.name != "nt":
         parser.error("Run on native Windows; Linux/WSL cannot establish MSVC runtime correctness")
     import ctypes
@@ -72,7 +77,8 @@ def main(argv=None):
     output.mkdir(parents=True, exist_ok=False)
     shutil.copyfile(__file__, output / "validate_windows.py")
     evidence = dict(schema=1, status="running", platform=sys.platform, commands=[], configurations={},
-                    obfuscation=args.obfuscation, constants=args.constants,
+                    obfuscation=args.obfuscation, constants=args.constants, name_style=args.name_style,
+                    retain_decoy_exports=args.retain_decoy_exports,
                     limitations=["Demo acceptance only; no Palace, numerical dependency, LTO, PCH or arbitrary plugin ABI claim.",
                                  "Protected private PDBs retain linker symbols; source debug metadata is removed by the launcher."])
 
@@ -101,6 +107,11 @@ def main(argv=None):
     initial_keys = load_keys(keys)
     builds, maps, names = {}, {}, {}
 
+    def symbol_map(build):
+        return {row["original"]: row["replacement"]
+                for path in (build / "private/maps").glob("*.json")
+                for row in json.loads(path.read_text()).get("symbols", [])}
+
     def records(build):
         reports = [json.loads(p.read_text()) for p in (build / "private/maps").glob("*.json")]
         require(len(reports) == 6, "All six target/TU objects must pass through the launcher")
@@ -108,6 +119,7 @@ def main(argv=None):
                 "Missing translation-unit coverage")
         require(len({r["object"] for r in reports}) == 6 and all(r["abi"] == "msvc" for r in reports), "Invalid object/ABI coverage")
         require(all(r["level"] == args.obfuscation for r in reports), "Incorrect obfuscation level")
+        require(all(r["name_style"] == args.name_style for r in reports), "Incorrect name style")
         if args.obfuscation != "NONE":
             policy = [r for r in reports if r["source"] == "policy.cpp"]
             require(len(policy) == 1, "Missing policy transformation report")
@@ -119,6 +131,25 @@ def main(argv=None):
                 previous = result.setdefault(row["original"], row)
                 require(previous == row, "Inconsistent names across translation units")
         require(any(r["protected"] for r in result.values()), "No RTTI selected")
+        if args.name_style == "DECOY":
+            definitions = {}
+            labels = {}
+            for report in reports:
+                for row in report["symbols"]:
+                    previous = labels.setdefault(row["original"], row["replacement"])
+                    require(previous == row["replacement"], "Inconsistent function aliases across TUs")
+                    if row["definition"]:
+                        definitions[row["original"]] = row["replacement"]
+                        object_path = build / report["object"]
+                        dumpbin = shutil.which("dumpbin", path=env["PATH"])
+                        require(dumpbin, "DECOY acceptance requires the MSVC dumpbin symbol inspector")
+                        actual = {line.partition("|")[2].strip().split()[0]
+                                  for line in run([dumpbin, "/symbols", object_path]).splitlines()
+                                  if "|" in line and "UNDEF" not in line and line.partition("|")[2].strip()}
+                        require(row["replacement"] in actual and row["original"] not in actual,
+                                "DECOY name absent or original retained in COFF function symbols")
+            require(set(definitions) == set(load_policy(ROOT / "examples/name-policy.json", True)),
+                    "Selected function definition coverage incomplete")
         return result
 
     def configure(build, config, protected):
@@ -129,6 +160,8 @@ def main(argv=None):
                    "-DANTI_REA_CODE_PROTECTION=" + ("ON" if protected else "OFF"),
                    "-DANTI_REA_CONSTANT_PROTECTION=" + args.constants,
                    "-DANTI_REA_OBFUSCATION=" + (args.obfuscation if protected else "NONE"),
+                   "-DANTI_REA_NAME_STYLE=" + (args.name_style if protected else "OPAQUE"),
+                   "-DANTI_REA_RETAIN_DECOY_EXPORTS=" + (args.retain_decoy_exports if protected else "OFF"),
                    "-DANTI_REA_KEYS=" + str(keys),
                    "-DCMAKE_PREFIX_PATH=" + str(args.sodium_prefix.resolve())]
         for kind in ("EXE", "SHARED"):
@@ -177,6 +210,9 @@ def main(argv=None):
             exports = [e.name.decode() for e in getattr(getattr(pe, "DIRECTORY_ENTRY_EXPORT", None), "symbols", []) if e.name]
             if path.name == "engine.dll":
                 require(set(exports) == {"ar_create", "ar_destroy", "ar_type", "ar_throw", "ar_compute", "ar_create_kind", "ar_reverse_cast"}, "Unexpected public exports")
+            else:
+                expected_exports = set(symbol_map(build).values()) if protected and args.retain_decoy_exports == "ON" else set()
+                require(set(exports) == expected_exports, "Unexpected or missing EXE decoy exports")
             pdbs = []
             for entry in getattr(pe, "DIRECTORY_ENTRY_DEBUG", []):
                 if entry.struct.Type == 2:
@@ -234,16 +270,22 @@ def main(argv=None):
                         if name not in {"foreign", "foreign_template"}:
                             require(any(r["opaque"] == raw and r["protected"] for r in mapping.values()), "Runtime name missing from map")
                     run([sys.executable, ROOT / "tools/anti_rea.py", "decode", "--build", build, "--rtti", names[label]["class"][0]])
+                    for replacement in symbol_map(build).values():
+                        run([sys.executable, ROOT / "tools/anti_rea.py", "decode", "--build", build, "--symbol", replacement])
                 evidence["configurations"][label] = dict(status="passed", rtti_checks=39,
+                    name_style=args.name_style if protected else "OPAQUE",
+                    retain_decoy_exports=args.retain_decoy_exports if protected else "OFF",
                     obfuscation=args.obfuscation if protected else "NONE",
                     constants=args.constants if protected else "OFF",
                     artifacts=stage(build, label, protected, mapping), mapped_types=len(mapping))
                 save()
         build = builds["release-protected"]
         before = maps["release-protected"]
+        symbols_before = symbol_map(build)
         constants_before = json.loads((build / "private/constants.json").read_text())
         run([cmake, "--build", build, "--clean-first", "--parallel", args.jobs])
         require(records(build) == before, "Same-key clean rebuild changed RTTI identifiers")
+        require(symbol_map(build) == symbols_before, "Same-key clean rebuild changed function labels")
         require(json.loads((build / "private/constants.json").read_text()) == constants_before,
                 "Same-key clean rebuild changed constant shares")
         evidence["same_key_rebuild"] = "passed"
@@ -255,6 +297,10 @@ def main(argv=None):
         # object rebuilds without requiring --clean-first from the operator.
         build_and_test(build)
         after = records(build)
+        symbols_after = symbol_map(build)
+        require(symbols_before.keys() == symbols_after.keys() and
+                all(symbols_before[name] != symbols_after[name] for name in symbols_before),
+                "Partial or ineffective function-name key rotation")
         constants_after = json.loads((build / "private/constants.json").read_text())
         require(constants_after["protected"] == (args.constants == "ON"), "Wrong constant protection state")
         for old, new in zip(constants_before["constants"], constants_after["constants"], strict=True):

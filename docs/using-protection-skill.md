@@ -83,6 +83,12 @@ These are demo measurements, not a default performance promise. See the
 
 ## Canonical Instructions
 
+The optional [name-style workflow](name-styles.md) adds common-code function/type
+aliases with private maps. Opaque mode remains the default. Windows can retain
+selected EXE aliases as exports, exposing additional addresses; this is OFF by
+default. See the [checked skill workflow](protection-skill/references/name-styles.md).
+No model-misclassification result is claimed.
+
 - [Skill instructions](protection-skill/index.md)
 - [Independent operations](protection-skill/references/operations.md)
 - [Integration contract](protection-skill/references/integration.md)

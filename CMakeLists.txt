@@ -7,6 +7,11 @@ option(ANTI_REA_CONSTANT_PROTECTION "Runtime-mask the five selected policy const
 option(ANTI_REA_STRIP_RELEASE "Strip the installed ELF release copy" ON)
 set(ANTI_REA_OBFUSCATION "NONE" CACHE STRING "NONE, LIGHT, MEDIUM, HEAVY, MIXED_VM")
 set_property(CACHE ANTI_REA_OBFUSCATION PROPERTY STRINGS NONE LIGHT MEDIUM HEAVY MIXED_VM)
+set(ANTI_REA_NAME_STYLE "OPAQUE" CACHE STRING "OPAQUE (existing policy) or DECOY (common-word internal aliases)")
+set_property(CACHE ANTI_REA_NAME_STYLE PROPERTY STRINGS OPAQUE DECOY)
+option(ANTI_REA_RETAIN_DECOY_EXPORTS "Windows only: expose selected decoy function labels in the EXE export table" OFF)
+set(ANTI_REA_NAME_POLICY "${CMAKE_CURRENT_SOURCE_DIR}/examples/name-policy.json" CACHE FILEPATH
+    "Explicit owned function symbols eligible for DECOY naming")
 set(ANTI_REA_KEYS "${CMAKE_CURRENT_SOURCE_DIR}/demo-keys/keys.json" CACHE FILEPATH
     "PUBLIC teaching keys by default; use private keys for real deployment")
 set(ANTI_REA_OPT "" CACHE FILEPATH "opt from the compiler's LLVM toolchain")
@@ -24,7 +29,7 @@ set(generated "${CMAKE_BINARY_DIR}/generated")
 file(MAKE_DIRECTORY "${generated}")
 file(GLOB_RECURSE example_sources CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/examples/*.cpp")
 file(GLOB protection_scripts CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/src/anti_rea/*.py")
-set_source_files_properties(${example_sources} PROPERTIES OBJECT_DEPENDS "${protection_scripts};${ANTI_REA_KEYS};${CMAKE_CURRENT_SOURCE_DIR}/examples/policy-constants.json")
+set_source_files_properties(${example_sources} PROPERTIES OBJECT_DEPENDS "${protection_scripts};${ANTI_REA_KEYS};${ANTI_REA_NAME_POLICY};${CMAKE_CURRENT_SOURCE_DIR}/examples/policy-constants.json")
 set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS
     "${ANTI_REA_KEYS}" "${CMAKE_CURRENT_SOURCE_DIR}/examples/diagnostics.json"
     "${CMAKE_CURRENT_SOURCE_DIR}/examples/policy-constants.json"

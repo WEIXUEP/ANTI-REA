@@ -121,6 +121,12 @@ run, including missing configurations rather than invented measurements.
 from information protection. See [xollvm integration](docs/xollvm.md) before
 enabling it. This project does not download or replace a compiler automatically.
 
+`ANTI_REA_NAME_STYLE=OPAQUE|DECOY` selects the original naming policy or common-word
+aliases for selected internal functions and RTTI types. Windows can explicitly
+retain selected EXE labels with `ANTI_REA_RETAIN_DECOY_EXPORTS=ON` (default OFF,
+exposes function addresses). See [name styles](docs/name-styles.md) for scope,
+private recovery and limits of claims about misleading models.
+
 ## Decrypt an Example Warning
 
 The warning prints `Payload: AR1:<key-id>:<base64>`. Pass the complete token:

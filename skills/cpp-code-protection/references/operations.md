@@ -60,10 +60,11 @@ python <skill-directory>/scripts/decode.py \
   --build /private/r17/build --keys /private/r17/keys.json --report warning.log
 python <skill-directory>/scripts/decode.py --build /private/r17/build --list-maps
 python <skill-directory>/scripts/decode.py --map /private/r17/maps --rtti OPAQUE_TOKEN
+python <skill-directory>/scripts/decode.py --map /private/r17/maps --symbol FUNCTION_ALIAS
 ```
 
 The generation/decode format is the example's schema 1, not an importer for
-arbitrary products. Generation needs PyNaCl. RTTI-only lookup and map inventory
+arbitrary products. Generation needs PyNaCl. RTTI/symbol lookup and map inventory
 need no crypto library or GUI. Decoding a sealed event requires an explicit
 private bundle; there is no implicit production-key search or demo-key fallback.
 Follow [key-management.md](key-management.md) before provisioning production.
@@ -71,9 +72,11 @@ Follow [key-management.md](key-management.md) before provisioning production.
 Supported diagnostic envelopes are `AR1:<key-id>:<base64>` with the example's
 sealed JSON fields and positional `{}` templates. The decoder checks the
 sealing key, naming master, site and recovered template against the map. It
-rejects executable formatting expressions. `--text`, `--report`, `--stdin` and
-`--rtti` are mutually exclusive. Mixed text preserves repeated recognized events
+rejects executable formatting expressions. `--text`, `--report`, `--stdin`,
+`--rtti` and `--symbol` are mutually exclusive input choices. Mixed text preserves repeated recognized events
 and input order. Unsupported or unrecognized logs do not count as success.
+`--symbol` performs exact private-map lookup of a common-word function alias;
+it does not guess semantics from the replacement name.
 
 `--build` discovers `private/diagnostics.json` and `private/maps/*.json`. Explicit
 `--map` accepts supported files or a flat directory of JSON maps. Inventory

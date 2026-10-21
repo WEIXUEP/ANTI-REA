@@ -2,6 +2,7 @@
 import re
 import subprocess
 from .crypto import opaque
+from .names import decoy, STYLES
 
 SCOPE = re.compile(r"\baegis::internal\b|\bprint_rtti\((?:void)?\)'?::")
 ITANIUM = re.compile(r'^(?P<head>@(?P<quote>"?)(?P<symbol>_ZTS[^"\s]+)(?P=quote) = [^\n]*?constant )\[(?P<size>\d+) x i8\] c"(?P<raw>[^"\n]+)\\00"(?P<tail>[^\n]*)$', re.M)
@@ -38,7 +39,9 @@ def decode_type(symbol, raw, tool, msvc):
     return output[len("typeinfo name for "):]
 
 
-def transform(ir, master, demangler, msvc=False, decode=None):
+def transform(ir, master, demangler, msvc=False, decode=None, name_style="OPAQUE"):
+    if name_style not in STYLES:
+        raise ValueError("Unknown name style: " + name_style)
     pattern = MSVC if msvc else ITANIUM
     candidates = [line for line in ir.splitlines()
                   if (line.startswith('@"??_R0') if msvc else re.match(r'^@"?_ZTS', line))
@@ -60,8 +63,11 @@ def transform(ir, master, demangler, msvc=False, decode=None):
         selected = bool(SCOPE.search(decoded))
         identity = opaque(master, "rtti-msvc-v1" if msvc else "rtti-itanium-v1", raw.lstrip("*"), 64)
         name = (".?AVR_" + identity + "@@") if msvc else (("*" if raw.startswith("*") else "") + "65R" + identity)
+        if name_style == "DECOY":
+            label = decoy(master, "rtti-msvc" if msvc else "rtti-itanium", raw.lstrip("*"), "type")
+            name = (".?AV" + label + "@@") if msvc else (("*" if raw.startswith("*") else "") + str(len(label)) + label)
         rows.append(dict(abi="msvc" if msvc else "itanium", original=raw, decoded=decoded,
-                         opaque=name if selected else raw, protected=selected))
+                         opaque=name if selected else raw, protected=selected, name_style=name_style))
         if not selected:
             return match[0]
         size = len(name) + 1

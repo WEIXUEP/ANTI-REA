@@ -138,6 +138,25 @@ class StandaloneSkillTests(unittest.TestCase):
             self.assertEqual(result.returncode, 0, result.stderr)
             self.assertIn("secret::X", json.loads(result.stdout)["results"][0]["decoded"])
 
+    def test_decoy_type_and_function_lookup_without_site_packages(self):
+        label = "CacheEntry_" + "a" * 64
+        itanium = str(len(label)) + label
+        rows = [dict(abi="itanium", original="N6secret1XE", decoded="secret::X", opaque=itanium, protected=True),
+                dict(abi="msvc", original=".?AVX@secret@@", decoded="class secret::X", opaque=".?AV" + label + "@@", protected=True)]
+        symbol = dict(original="_Z3foov", decoded="foo()", replacement="read_buffer_" + "b" * 64)
+        mapping = self.root / "types.json"
+        mapping.write_text(json.dumps(dict(schema=1, rtti=rows, symbols=[symbol])))
+        for name in (itanium, label, rows[1]["opaque"], "class " + label):
+            result = self.run_tool("decode.py", "--map", mapping, "--rtti", name, no_site=True)
+            # An undecorated label shared by both ABIs is deliberately ambiguous.
+            self.assertEqual(result.returncode, 1 if name in {label, "class " + label} else 0, result.stderr)
+        result = self.run_tool("decode.py", "--map", mapping, "--text", itanium, no_site=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        result = self.run_tool("decode.py", "--map", mapping, "--symbol", symbol["replacement"], no_site=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(json.loads(result.stdout)["results"][0]["original"], "_Z3foov")
+        self.assertEqual(self.run_tool("decode.py", "--map", mapping, "--symbol", "missing", no_site=True).returncode, 2)
+
     def test_audit_unicode_offsets_packages_and_fail_closed_input(self):
         binary = self.root / "fixture.bin"
         text = "Private\nmessage"

@@ -6,7 +6,7 @@ import os
 from pathlib import Path
 import sys
 
-from _recovery import MAX_INPUT, RecoveryError, decode_text, identity, load_key, load_maps
+from _recovery import MAX_INPUT, RecoveryError, decode_text, decode_symbol, identity, load_key, load_maps
 
 
 def main(argv=None):
@@ -19,11 +19,12 @@ def main(argv=None):
     inputs.add_argument("--report", type=Path, help="UTF-8 log file")
     inputs.add_argument("--stdin", action="store_true")
     inputs.add_argument("--rtti", help="Opaque RTTI token, optionally demangled")
+    inputs.add_argument("--symbol", help="Exact decoy function label from a private map")
     inputs.add_argument("--list-maps", action="store_true", help="Inspect loading inventory without decoding")
     parser.add_argument("--output", type=Path, help="Explicit private JSON output; never overwrite")
     args = parser.parse_args(argv)
-    if not args.list_maps and args.text is None and args.report is None and not args.stdin and args.rtti is None:
-        parser.error("Select --text, --report, --stdin, --rtti or --list-maps")
+    if not args.list_maps and args.text is None and args.report is None and not args.stdin and args.rtti is None and args.symbol is None:
+        parser.error("Select --text, --report, --stdin, --rtti, --symbol or --list-maps")
     try:
         books, inventory = load_maps(args.build, args.map)
         key = load_key(args.keys) if args.keys else None
@@ -42,7 +43,8 @@ def main(argv=None):
                 text = sys.stdin.read(MAX_INPUT + 1)
             else:
                 text = args.rtti if args.rtti is not None else args.text
-            result["results"] = decode_text(text, key, books, args.rtti is not None)
+            result["results"] = ([dict(index=0, offset=0, status="recovered", **decode_symbol(args.symbol, books))]
+                                 if args.symbol is not None else decode_text(text, key, books, args.rtti is not None))
             code = int(any(row["status"] != "recovered" for row in result["results"]))
         content = json.dumps(result, indent=2, ensure_ascii=True) + "\n"
         if args.output:
