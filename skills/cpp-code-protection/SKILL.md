@@ -1,6 +1,6 @@
 ---
 name: cpp-code-protection
-description: Guide and implement scoped C++ diagnostic encryption, opaque or common-word internal names, selected numeric masking, release stripping and selective obfuscation. Establish original-program baselines, validate behavior and recovery limits, and manage private keys/maps. Use for authorized protection changes, not read-only leakage detection.
+description: Guide and implement scoped C++ diagnostic and runtime-resource encryption, opaque or common-word internal names, selected numeric masking, release stripping and selective obfuscation. Establish original-program baselines, validate behavior and recovery limits, and manage private keys/maps. Use for authorized protection changes, not read-only leakage detection.
 ---
 
 # C++ Code Protection
@@ -26,6 +26,7 @@ other producers before adapting them. A GUI is design guidance, not bundled UI.
 | Generate compatible private material | `scripts/generate_keys.py`; [key-management.md](references/key-management.md) |
 | Recover diagnostics, locations, RTTI and function aliases | `scripts/decode.py`; [recovery-tools.md](references/recovery-tools.md) |
 | Implement diagnostics, RTTI, build and release protection | [integration.md](references/integration.md) |
+| Embed encrypted runtime resources and cache derived binary results | [runtime-resources.md](references/runtime-resources.md) |
 | Choose controls and function-level obfuscation | [remediation.md](references/remediation.md) |
 | Integrate selected constants and run matched-control acceptance | [runtime-constants.md](references/runtime-constants.md) |
 | Select common-word function/type aliases and release visibility | [name-styles.md](references/name-styles.md) |
@@ -79,11 +80,21 @@ modules and central diagnostic/build interfaces over mass call-site changes.
 Retain condition single evaluation, exceptions, abort behavior, MPI routing,
 cross-library type identity and numerical semantics.
 
-Encrypt retained templates at build time with a maintained public-key library;
-runtime carries only sealing material, never private recovery keys. Stable
-opaque naming requires release maps and is not reversible encryption. Never
-fall back to plaintext on protection failure. Do not patch arbitrary linked
+For offline-recoverable diagnostics, encrypt retained templates at build time
+with a maintained public-key library; runtime carries only sealing material,
+never private recovery keys. Stable opaque naming requires release maps and is
+not reversible encryption. Never fall back to plaintext on protection failure.
+Do not patch arbitrary linked
 bytes, disable RTTI or delete exports to satisfy a string scan.
+
+Resources that the application must decrypt locally require a separate contract.
+Read [runtime-resources.md](references/runtime-resources.md) for authenticated
+build-time packaging, memory-only consumption and persistent derived-result
+caches. Embedded symmetric keys are recoverable from the shipped program; do
+not claim the private-key separation of sealed diagnostics for this mode. This
+is integration guidance, not a bundled resource packer or cache implementation.
+Keep it opt-in; existing RTTI/diagnostic acceptance and skill packaging tests do
+not verify a target's resource encryption or cache behavior.
 
 For selected numeric constants, runtime masking can reduce exact-byte signatures.
 Prevent optimizer folding and inspect the final linked artifact, including shared

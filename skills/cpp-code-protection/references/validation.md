@@ -78,6 +78,14 @@ corpus; do not count stripped private names as resolved original export leaks.
   to a new location. Inventory nonbinary assets too: aliases do not encrypt their
   contents. Private keys, IR, maps and debug files must stay outside that package.
 
+For selected encrypted resources, run the separate acceptance workflow in
+[runtime-resources.md](runtime-resources.md): authenticated metadata and payload
+rejection, isolated installed consumers, complete incremental invalidation and
+separate-process cache reuse. Scan any derived cache too. A deliberately embedded
+resource key is recoverable runtime material; it does not relax isolation of
+diagnostic private keys, naming masters or recovery maps. No resource packer/cache
+runtime is bundled, so ordinary skill/package tests do not pass these gates.
+
 ## Use Fresh Artifacts and Interpret Findings
 
 Use a clean or unique staging directory, and copy the release produced by this

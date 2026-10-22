@@ -36,6 +36,12 @@ Windows can supply `clang-cl.exe` and `opt.exe`. A successful capability probe
 does not establish compiler provenance, target ABI support, code coverage or
 actual obfuscation. Use [integration.md](integration.md) for those decisions.
 
+For encrypted runtime resources and persistent derived results, read
+[runtime-resources.md](runtime-resources.md). That mode is integration guidance:
+none of these scripts packs/decrypts resources or implements a cache. The key
+generator emits diagnostic/naming material only; `doctor.py --require crypto`
+checks PyNaCl availability, not an AES-GCM provider or resource integration.
+
 ## Audit Evidence at the Integration Boundary
 
 This skill contains no scanner. Preserve the target's original audit report or

@@ -11,7 +11,8 @@
 | Source basenames with no directories | Debug records or compiler source-unit field | Remove private metadata and alias compilation-unit labels | File/symbol scan; retain internal debug artifacts separately |
 | PDB developer path | PE CodeView | PDB basename linker rule; private PDB retention | PE CodeView audit, package inventory |
 | Absolute library search path | RPATH/RUNPATH | Executable-relative installation policy | Relocated installed package |
-| Resource/source filename | Runtime locator or JIT source metadata | Stable aliases and executable-relative resolution | Resource loading; disclose readable resource contents |
+| Resource/source filename | Runtime locator or source metadata | Stable aliases and executable-relative resolution | Resource loading; disclose readable resource contents |
+| Selected locally consumed resource contents | Packaged data files or embedded payloads | Opt-in authenticated bundles; see [runtime-resources.md](runtime-resources.md); embedded decryption keys remain recoverable | Original-corpus baseline, tag/AAD rejection, memory consumption, relocated install, derived-cache inspection and separate runtime acceptance |
 | Ordinary runtime string | Logs, labels, exception `what()` | Protect the owning interface; optional string obfuscation | Static scan and runtime behavior |
 | Selected numeric constants | Instruction immediates or referenced data | Scoped runtime masking, if byte-signature reduction is useful | Positive original corpus, optimized final-byte scan, independent arithmetic tests, decoder recovery attempt and incremental cost |
 | Dependency diagnostics | External runtime/library | Explicit separate dependency work if authorized | Rebuild dependency and consumers |

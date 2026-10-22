@@ -121,6 +121,12 @@ On Windows, review DLL search and deployment policy; do not add unsafe fallback
 search locations. Package inspection must include configuration/text assets and
 debug artifacts, not only the main executable.
 
+When resource contents themselves are sensitive and the application needs to
+consume them locally, read [runtime-resources.md](runtime-resources.md). It covers
+authenticated encrypted bundles, in-memory loading, installation hygiene and
+optional persistent caches of derived binary results. Renaming a resource is not
+encryption, and embedding a decryption key does not prevent analyst recovery.
+
 ## xollvm and Per-function Selection
 
 The reference integration pins xollvm `v0.11.1`, commit

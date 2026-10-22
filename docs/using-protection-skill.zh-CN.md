@@ -73,11 +73,17 @@ NONE 下掩码增加 2.36% 循环时间；MIXED_VM 下相对同级对照增加 5
 但会额外暴露地址，因此默认关闭。Skill 包含[已验证的接入与恢复规则（英文）](protection-skill/references/name-styles.md)。
 目前不宣称已证明大模型会误判。
 
+[运行时资源方案（英文）](protection-skill/references/runtime-resources.md) 提供可选的
+AES-GCM 打包、内存消费和跨进程派生结果缓存设计；内嵌密钥仍可被提取。
+该流程要求原程序 baseline 及目标实现的独立验收。Skill 尚不包含资源打包器、
+资源密钥生成器或缓存运行库，文档及 ZIP 检查通过不能证明资源加密与缓存已可运行。
+
 - [Skill 说明（英文）](protection-skill/index.md)
 - [独立操作（英文）](protection-skill/references/operations.md)
 - [接入契约（英文）](protection-skill/references/integration.md)
 - [修复与函数选择（英文）](protection-skill/references/remediation.md)
 - [运行时常量、对照与原生验收（英文）](protection-skill/references/runtime-constants.md)
+- [加密运行时资源与缓存设计（英文）](protection-skill/references/runtime-resources.md)
 - [密钥生命周期（英文）](protection-skill/references/key-management.md)
 - [离线恢复和 GUI（英文）](protection-skill/references/recovery-tools.md)
 - [验证（英文）](protection-skill/references/validation.md)

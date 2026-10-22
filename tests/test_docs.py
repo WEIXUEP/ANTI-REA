@@ -96,6 +96,29 @@ class PublicationTests(unittest.TestCase):
             self.assertNotIn(destination, routes, (source, routes.get(destination)))
             routes[destination] = source
 
+    @unittest.skipUnless(importlib.util.find_spec("mkdocs"), "Documentation dependencies unavailable")
+    def test_published_skill_pages_are_in_navigation(self):
+        from mkdocs.config import load_config
+
+        config = load_config(config_file=str(ROOT / "mkdocs.yml"))
+
+        def destinations(value):
+            if isinstance(value, str):
+                yield value
+            elif isinstance(value, list):
+                for item in value:
+                    yield from destinations(item)
+            elif isinstance(value, dict):
+                for item in value.values():
+                    yield from destinations(item)
+
+        navigation = set(destinations(config["nav"]))
+        for skill, route in site_hook.SKILL_ROUTES.items():
+            for name in site_hook.SKILL_FILES[skill]:
+                if name.endswith(".md"):
+                    page = route + "/" + ("index.md" if name == "SKILL.md" else name)
+                    self.assertIn(page, navigation, "Published skill page missing from navigation: " + page)
+
     def test_markdown_links_stay_within_each_archive(self):
         for skill in site_hook.SKILL_FILES:
             contents = site_hook.skill_contents(ROOT, skill)

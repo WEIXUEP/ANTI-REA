@@ -116,6 +116,7 @@ nav:
       - Protection Integration: protection-skill/references/integration.md
       - Remediation Policy: protection-skill/references/remediation.md
       - Runtime Constants and Controls: protection-skill/references/runtime-constants.md
+      - Runtime Resource Design: protection-skill/references/runtime-resources.md
       - Optional Name Styles: protection-skill/references/name-styles.md
       - Validation Guide: protection-skill/references/validation.md
       - Recovery Tool Design: protection-skill/references/recovery-tools.md

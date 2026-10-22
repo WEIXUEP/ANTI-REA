@@ -89,11 +89,19 @@ selected EXE aliases as exports, exposing additional addresses; this is OFF by
 default. See the [checked skill workflow](protection-skill/references/name-styles.md).
 No model-misclassification result is claimed.
 
+The [runtime-resource reference](protection-skill/references/runtime-resources.md)
+adds opt-in design guidance for AES-GCM bundles, in-memory consumption and
+persistent derived-result caches. Embedded keys remain recoverable. It requires
+an original-program baseline and separate target acceptance; the skill includes
+no resource packer, resource-key generator or cache runtime. Documentation and
+ZIP checks do not establish working resource encryption or caching.
+
 - [Skill instructions](protection-skill/index.md)
 - [Independent operations](protection-skill/references/operations.md)
 - [Integration contract](protection-skill/references/integration.md)
 - [Remediation and function-selection policy](protection-skill/references/remediation.md)
 - [Runtime constants, controls and native acceptance](protection-skill/references/runtime-constants.md)
+- [Encrypted runtime resources and cache design](protection-skill/references/runtime-resources.md)
 - [Key generation and lifecycle](protection-skill/references/key-management.md)
 - [Offline recovery and GUI design](protection-skill/references/recovery-tools.md)
 - [Validation](protection-skill/references/validation.md)

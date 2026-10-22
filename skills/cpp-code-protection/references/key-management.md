@@ -7,6 +7,12 @@ because an existing key is missing or a report fails to decode.
 
 ## Separate Key Roles
 
+The diagnostic and naming rules below keep developer secrets out of the runtime.
+Locally decrypted application resources have a different boundary: a shipped
+symmetric resource key is recoverable runtime material, not a private diagnostic
+recovery key. Keep these roles independent and use
+[runtime-resources.md](runtime-resources.md) for that explicitly selected mode.
+
 | Material | Role | Where it belongs |
 | --- | --- | --- |
 | Diagnostic public sealing key | Encrypt templates and runtime diagnostic fields | Build generator and shipped reporter |
@@ -14,8 +20,9 @@ because an existing key is missing or a report fails to decode.
 | Naming master or derived naming keys | Generate stable opaque RTTI, file and line identifiers | Authorized build tools only |
 | Public key fingerprint/key ID | Select compatible recovery material | Logs, release manifest, maps and decoder UI |
 | Original-name/location maps | Resolve opaque identifiers to source data | Restricted release archive and recovery environment |
+| Embedded symmetric resource key | Decrypt application resources locally; recoverable by an analyst | Scoped build packer and shipped runtime; never reuse diagnostic or naming secrets |
 
-The private decryption key must not be a compiler definition or a C++ runtime
+The private diagnostic decryption key must not be a compiler definition or a C++ runtime
 constant. The naming master is also secret, but serves a different purpose from
 the decryption key. Share compatible naming material across related compilation
 units and libraries; use separate domains for RTTI, file, line and other IDs.
@@ -61,8 +68,11 @@ This is a specific supported schema, not a universal key importer. Before
 adapting it elsewhere, inspect that producer's algorithm, key lengths, encoding,
 derivation domains and IDs. Do not copy the example schema into an incompatible
 tool or automatically convert existing production keys.
+The generator does not emit a resource AES key, and `decode.py` does not decrypt
+resource bundles or cache entries. Provision a separately scoped resource key
+with the selected provider; do not repurpose `master` or `private` from this file.
 
-## Provisioning and Build Rules
+## Diagnostic and Naming Provisioning
 
 1. Identify the authorized output path, expected format and release identity.
    Reuse an existing compatible key when stable names are required. Check
@@ -77,11 +87,13 @@ tool or automatically convert existing production keys.
    project's CMake input is `ANTI_REA_KEYS`; inspect another target's actual
    option rather than inventing a common name. Avoid secret values in command
    lines, CMake caches, environment dumps and generated headers.
-5. Give the runtime only the public sealing material. Build-only naming exports
+5. For diagnostics, give the runtime only the public sealing material. Build-only naming exports
    and generated original-name maps remain private. Archive the effective key
    identity, naming algorithm/version, ABI and maps with the matching release.
 6. Decode a report from that actual protected release and scan its fresh install
-   package for private keys, maps, IR and debug artifacts before distribution.
+   package for diagnostic private keys, naming secrets, maps, IR and debug artifacts
+   before distribution. A deliberately shipped resource key is recoverable runtime
+   material; disclose it separately rather than claiming no keys ship at all.
 
 Automatic reuse is appropriate when a compatible key is explicitly configured.
 Automatic creation is appropriate only for a documented, authorized initialization
