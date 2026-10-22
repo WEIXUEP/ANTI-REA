@@ -75,8 +75,9 @@ NONE 下掩码增加 2.36% 循环时间；MIXED_VM 下相对同级对照增加 5
 
 [运行时资源方案（英文）](protection-skill/references/runtime-resources.md) 提供可选的
 AES-GCM 打包、内存消费和跨进程派生结果缓存设计；内嵌密钥仍可被提取。
-该流程要求原程序 baseline 及目标实现的独立验收。Skill 尚不包含资源打包器、
-资源密钥生成器或缓存运行库，文档及 ZIP 检查通过不能证明资源加密与缓存已可运行。
+该流程要求原程序 baseline 及目标实现的独立验收。源码仓库提供
+[独立 Windows 案例](runtime-resources.zh-CN.md)；下载的 Skill 不包含资源打包器、
+资源密钥生成器或缓存运行库，文档及 ZIP 检查不能替代目标程序的运行验收。
 
 - [Skill 说明（英文）](protection-skill/index.md)
 - [独立操作（英文）](protection-skill/references/operations.md)

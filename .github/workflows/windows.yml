@@ -2,9 +2,9 @@ name: Windows native acceptance (operator toolchain)
 on:
   push:
     branches: [main]
-    paths: ['src/**', 'tools/**', 'tests/**', 'examples/**', 'cmake/**', 'skills/**', 'CMakeLists.txt', '.github/workflows/windows.yml']
+    paths: ['src/**', 'tools/**', 'tests/**', 'examples/**', 'cases/**', 'cmake/**', 'skills/**', 'CMakeLists.txt', '.github/workflows/windows.yml']
   pull_request:
-    paths: ['src/**', 'tools/**', 'tests/**', 'examples/**', 'cmake/**', 'skills/**', 'CMakeLists.txt', '.github/workflows/windows.yml']
+    paths: ['src/**', 'tools/**', 'tests/**', 'examples/**', 'cases/**', 'cmake/**', 'skills/**', 'CMakeLists.txt', '.github/workflows/windows.yml']
   workflow_dispatch:
     inputs:
       llvm_bin:
@@ -26,6 +26,23 @@ on:
 permissions:
   contents: read
 jobs:
+  resources:
+    runs-on: windows-2025
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - uses: ilammy/msvc-dev-cmd@v1
+      - name: Accept encrypted resources and numeric cache on native Windows
+        shell: pwsh
+        run: |
+          python -m pip install -r requirements.txt
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          $compiler = Get-Command clang-cl.exe -ErrorAction Stop
+          python tools/validate_resources_windows.py --llvm-bin (Split-Path $compiler.Source) --generator Ninja --jobs 8 --out build/resource-acceptance-ci
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          # Evidence contains AES keys, generated headers and internal PDBs; do not upload it.
   scanner:
     runs-on: windows-2025
     steps:

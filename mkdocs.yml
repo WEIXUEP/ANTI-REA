@@ -77,6 +77,7 @@ nav:
       - 诊断与恢复: diagnostics.zh-CN.md
       - 构建与集成: integration.zh-CN.md
       - 可选名称混淆: name-styles.zh-CN.md
+      - 资源加密与缓存案例: runtime-resources.zh-CN.md
       - xollvm 与函数选择: xollvm.zh-CN.md
       - Windows 构建: windows.zh-CN.md
       - 检测 Skill 使用指南: audit-skill.zh-CN.md
@@ -96,6 +97,7 @@ nav:
       - Diagnostics and Recovery: diagnostics.md
       - Build and Integration: integration.md
       - Optional Name Styles: name-styles.md
+      - Runtime Resource Case: runtime-resources.md
       - xollvm and Function Selection: xollvm.md
       - Windows: windows.md
   - Leakage Detection Skill:

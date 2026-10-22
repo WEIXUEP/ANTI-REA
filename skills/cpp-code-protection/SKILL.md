@@ -92,9 +92,11 @@ Read [runtime-resources.md](references/runtime-resources.md) for authenticated
 build-time packaging, memory-only consumption and persistent derived-result
 caches. Embedded symmetric keys are recoverable from the shipped program; do
 not claim the private-key separation of sealed diagnostics for this mode. This
-is integration guidance, not a bundled resource packer or cache implementation.
-Keep it opt-in; existing RTTI/diagnostic acceptance and skill packaging tests do
-not verify a target's resource encryption or cache behavior.
+is integration guidance; the source checkout has a separate Windows CNG case,
+while the downloaded skill does not bundle a resource packer or cache runtime.
+Keep it opt-in and run its dedicated native validator. Existing RTTI/diagnostic
+acceptance and skill packaging tests do not verify resource/cache behavior or
+establish compatibility with another target.
 
 For selected numeric constants, runtime masking can reduce exact-byte signatures.
 Prevent optimizer folding and inspect the final linked artifact, including shared

@@ -38,7 +38,8 @@ actual obfuscation. Use [integration.md](integration.md) for those decisions.
 
 For encrypted runtime resources and persistent derived results, read
 [runtime-resources.md](runtime-resources.md). That mode is integration guidance:
-none of these scripts packs/decrypts resources or implements a cache. The key
+none of the downloaded scripts packs/decrypts resources or implements a cache.
+The source checkout's separate Windows case has its own packer and validator. The key
 generator emits diagnostic/naming material only; `doctor.py --require crypto`
 checks PyNaCl availability, not an AES-GCM provider or resource integration.
 

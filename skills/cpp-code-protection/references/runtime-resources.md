@@ -2,12 +2,12 @@
 
 Read when an authorized protection task includes resource contents that the
 application must consume locally, or reusable results derived from those contents.
-This is a design and integration workflow, not a bundled implementation.
-The example checkout and downloaded skill do not currently provide a resource
-packer, resource-key generator, resource decoder or persistent-cache runtime.
-`generate_keys.py`, `decode.py` and the existing Windows demo validator cover
-other mechanisms; they do not implement or validate this contract. Do not invent
-resource CMake switches or report these acceptance checks as already passed.
+The source checkout includes an independent Windows case in
+`cases/runtime-resources`, with a CNG packer, memory consumer and numeric-data
+cache. The downloaded skill remains integration guidance and does not bundle
+those binaries or source files. Its `generate_keys.py` and `decode.py` cover
+diagnostics/names, not resource keys or bundles. The resource case has its own
+validator; the RTTI demo validator does not validate this mechanism.
 
 ## Choose the Correct Security Boundary
 
@@ -156,6 +156,72 @@ handle/snapshot; checking a file and reopening a replaceable path leaves a race.
 
 ## Acceptance and Handoff
 
+### Independent Windows Case
+
+From an existing ANTI-REA checkout with Python dependencies, CMake/JOM and the
+selected Windows developer environment:
+
+```powershell
+python tools/validate_resources_windows.py `
+  --llvm-bin F:\Program_Professional\xollvm-windows-llvm23-Release\bin `
+  --environment F:\Intel\oneAPI\setvars.bat --jobs 8 `
+  --out F:\tmp\resource-acceptance-r001
+if ($LASTEXITCODE -ne 0) { throw "Resource case acceptance failed" }
+```
+
+Use a fresh output directory. The validator copies the case before mutating
+fixtures, builds Debug/Release protection OFF/ON, and retains logs, hashes and
+`result.json`. The case's `AR_ENCRYPT_RESOURCES` switch defaults OFF;
+`AR_RESOURCE_KEY_FILE` selects an explicitly generated private state file.
+These are case-specific CMake options, not universal integration switches.
+The build-only `resource-packer keygen <new-file>` uses exclusive creation.
+The key state contains an AES key, nonce prefix, counter and corruption checksum.
+Packing locks it, validates it, reserves and flushes the next counter before
+encryption. Preserve the active state with its key; do not roll it back, clone it
+into independent active writers, or recreate missing state for the same AES key.
+Checksum failure and a conservative per-key budget of 2^20 encryptions stop
+packaging (each plaintext is bounded to 4 MiB). This is not a claim of
+transactional recovery from every storage/power-loss failure.
+
+The consumer handles a small explicit three-level text-resource grammar and
+derives a uint32 lookup table, checked against independent Python arithmetic.
+It authenticates/parses the required bundle before a cache hit or explicit
+`--external-dir` override. `--bundle` selects an alternate encrypted bundle for
+validation using the same embedded key. Default lookup uses only the embedded
+bundle or installed OFF resources beside the executable, never the source tree.
+`--cache-dir`, `--no-cache` and `--option` exercise reuse controls. The default cache
+is under `%LOCALAPPDATA%/ANTI-REA/resource-demo/v1`.
+
+Cache identity covers all sorted resource contents/names, the numeric option,
+pointer size, producer-source/compiler fingerprints and build flags. The case
+invalidates even unused-resource changes conservatively. It does not fingerprint
+the full EXE because that would include randomized bundle ciphertext. Unchanged
+semantic data can reuse the numeric cache after repacking or resource-key rotation,
+but only after authenticating the current bundle. This reuse is specific to
+non-executable derived data; a target with a different trust policy may need a
+separate trust-version field and mandatory invalidation.
+
+The cache uses bounded snapshots, a versioned header and SHA-256 corruption
+checks, unique exclusive temporary files and atomic publication. It does not
+execute cache bytes or authenticate them against a malicious writer. The case's
+countertest forges data plus its hash to demonstrate that limitation; the normal
+numerical oracle must still pass for all trusted-cache scenarios. Explicitly
+recorded interrupted-temp tests simulate partial files, not a storage power cut.
+No compression, universal dependency resolver or resource decoder is bundled
+with the skill. Embedded keys and logical names still used by the consumer
+remain observable; the tested secret corpus consists of selected resource labels.
+
+Native Windows x64/clang-cl 23.1.2 acceptance on 2026-10-22 passed Debug/Release
+OFF/ON plus a rotated-key installation, with 171 recorded assertions. Selected
+original labels were positive in OFF resources and absent from protected packages
+and scanned caches. Seven-sample Release internal medians were 6.53 ms cold,
+0.70 ms warm and 4.80 ms disabled; process medians were 14.80, 7.37 and 12.98 ms.
+These are local case observations, not an accepted application budget or isolated
+encryption cost. The known-key byte-location and forged-cache countertests
+confirmed the stated limits; neither is evidence of blinded reverse engineering.
+
+### Target Integration Checks
+
 - Keep original and protection-OFF controls; verify normal results independently
   of cache-hit messages and resource names.
 - Test encryption/decryption and rejection of wrong keys, altered ciphertext,
@@ -186,6 +252,6 @@ plaintext copies, recoverable key material, unsupported consumers/platforms and
 cache limits. Keep artifact identity, behavior, direct-byte hiding, authenticity,
 reverse-engineering resistance and performance verdicts separate.
 Skill validation, archive tests and documentation builds validate distribution
-and references only. Until a target implementation runs the checks above, mark
-resource encryption and persistent caching as design guidance with runtime
-acceptance pending.
+and references only. The case's native acceptance is separate evidence. For any
+other target, keep runtime acceptance pending until its implementation passes
+the applicable checks; the case does not establish arbitrary application support.

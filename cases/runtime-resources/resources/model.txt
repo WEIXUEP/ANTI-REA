@@ -1,0 +1,4 @@
+model-v1
+label ConfidentialResourceModel_27ce194f
+include nested/coefficients.txt
+bias 7

@@ -92,9 +92,10 @@ No model-misclassification result is claimed.
 The [runtime-resource reference](protection-skill/references/runtime-resources.md)
 adds opt-in design guidance for AES-GCM bundles, in-memory consumption and
 persistent derived-result caches. Embedded keys remain recoverable. It requires
-an original-program baseline and separate target acceptance; the skill includes
-no resource packer, resource-key generator or cache runtime. Documentation and
-ZIP checks do not establish working resource encryption or caching.
+an original-program baseline and separate target acceptance. The source checkout
+provides an [independent Windows case](runtime-resources.md); the downloaded skill
+includes no resource packer, resource-key generator or cache runtime. Documentation
+and ZIP checks do not establish a target's resource encryption or caching.
 
 - [Skill instructions](protection-skill/index.md)
 - [Independent operations](protection-skill/references/operations.md)
