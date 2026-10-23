@@ -1,0 +1,4 @@
+interface:
+  display_name: "Python Code Protection"
+  short_description: "Test Python protection, behavior, recovery and cost"
+  default_prompt: "Use $python-code-protection to establish my original Python release baseline, implement scoped protection and verify behavior, recovery limits and performance."

@@ -2,8 +2,8 @@
 
 English | [简体中文](README.zh-CN.md)
 
-A reproducible C++ information-leakage laboratory: observe what a native binary
-reveals, apply narrowly scoped protections, and measure what actually changes.
+A reproducible C++ and Python information-leakage laboratory: observe what a
+release reveals, apply narrowly scoped protections, and measure what changes.
 
 **Protection is not a promise that a program cannot be reverse engineered.**
 This project distinguishes four different tools: diagnostic confidentiality,
@@ -12,7 +12,7 @@ opaque RTTI names, release-symbol hygiene, and code obfuscation.
 ## Documentation Website
 
 The project includes a searchable MkDocs Material site with grouped technical
-guides, measured results and two independently downloadable skills. See the
+guides, measured results and four independently downloadable skills. See the
 [documentation home](docs/index.md) or [GitHub Pages setup](docs/github-pages.md).
 
 **Online documentation:** <https://weixuep.github.io/ANTI-REA/>
@@ -38,6 +38,7 @@ GitHub metadata; forks can override it with `ANTI_REA_SITE_URL`.
 - Optional runtime masking of five policy constants, with separate byte-hiding and recovery checks.
 - A portable source/binary auditor and separate detection/protection skills.
 - Optional pinned REA analysis for baseline-bound native vulnerability investigation.
+- Windows Python source/pyc, PyInstaller, AES loading, PyArmor trial and Nuitka comparisons, with [verified recovery and cost](docs/python-results.md) and [two Python skills](docs/python-protection.md).
 
 The example is a small generic computational engine, not a real solver. Its
 integer workload makes exact correctness comparisons easy and excludes numerical

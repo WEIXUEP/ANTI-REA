@@ -1,5 +1,5 @@
 site_name: ANTI-REA
-site_description: Practical C++ information protection, auditing and reproducible measurements.
+site_description: Practical C++ and Python protection, auditing and reproducible measurements.
 site_url: !ENV [ANTI_REA_SITE_URL, 'https://weixuep.github.io/ANTI-REA/']
 repo_url: https://github.com/WEIXUEP/ANTI-REA
 repo_name: WEIXUEP/ANTI-REA
@@ -46,6 +46,8 @@ hooks:
 watch:
   - skills/cpp-leakage-audit
   - skills/cpp-code-protection
+  - skills/python-code-protection
+  - skills/python-leakage-audit
   - LICENSE
 
 markdown_extensions:
@@ -78,6 +80,8 @@ nav:
       - 构建与集成: integration.zh-CN.md
       - 可选名称混淆: name-styles.zh-CN.md
       - 资源加密与缓存案例: runtime-resources.zh-CN.md
+      - Python 保护与恢复: python-protection.zh-CN.md
+      - Python 实测结果: python-results.zh-CN.md
       - xollvm 与函数选择: xollvm.zh-CN.md
       - Windows 构建: windows.zh-CN.md
       - 检测 Skill 使用指南: audit-skill.zh-CN.md
@@ -89,6 +93,15 @@ nav:
       - 剩余暴露: remaining-exposure.zh-CN.md
       - GitHub Pages 发布: github-pages.zh-CN.md
   - Home: index.md
+  - Python:
+      - Protection and Recovery: python-protection.md
+      - Windows Results: python-results.md
+      - Protection Skill: python-protection-skill/index.md
+      - Protection Operations: python-protection-skill/references/operations.md
+      - Verified Protection Boundary: python-protection-skill/references/verified-results.md
+      - Audit Skill: python-audit-skill/index.md
+      - Audit Operations: python-audit-skill/references/operations.md
+      - Recovery Research: python-audit-skill/references/recovery.md
   - Getting Started:
       - Quickstart: quickstart.md
       - Threat Model: threat-model.md

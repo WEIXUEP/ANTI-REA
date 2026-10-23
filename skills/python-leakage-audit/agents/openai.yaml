@@ -1,0 +1,4 @@
+interface:
+  display_name: "Python Leakage Audit"
+  short_description: "Locate Python leaks and verify bounded recovery claims"
+  default_prompt: "Use $python-leakage-audit to capture my original Python release baseline, locate exposed names and code, and test authorized release-only recovery with private HTML evidence."

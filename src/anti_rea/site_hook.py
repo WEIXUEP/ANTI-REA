@@ -1,9 +1,25 @@
-"""Publish two independent skills using explicit public-file allowlists."""
+"""Publish independent skills using explicit public-file allowlists."""
 from io import BytesIO
 from pathlib import Path
 from zipfile import ZIP_DEFLATED, ZipFile, ZipInfo
 
 SKILL_FILES = {
+    "python-code-protection": (
+        "SKILL.md",
+        "references/operations.md",
+        "references/verified-results.md",
+        "scripts/doctor.py",
+        "agents/openai.yaml",
+    ),
+    "python-leakage-audit": (
+        "SKILL.md",
+        "references/operations.md",
+        "references/recovery.md",
+        "scripts/audit.py",
+        "scripts/extract.py",
+        "scripts/capture.py",
+        "agents/openai.yaml",
+    ),
     "cpp-leakage-audit": (
         "SKILL.md",
         "references/interpretation.md",
@@ -43,7 +59,8 @@ SKILL_FILES = {
         "agents/openai.yaml",
     ),
 }
-SKILL_ROUTES = {"cpp-leakage-audit": "skill", "cpp-code-protection": "protection-skill"}
+SKILL_ROUTES = {"cpp-leakage-audit": "skill", "cpp-code-protection": "protection-skill",
+                "python-code-protection": "python-protection-skill", "python-leakage-audit": "python-audit-skill"}
 
 
 def skill_contents(root, skill="cpp-leakage-audit"):

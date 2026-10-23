@@ -2,13 +2,13 @@
 
 [English](README.md) | 简体中文
 
-可复现的 C++ 信息泄露实验项目：观察原生二进制暴露的信息，实施限定范围的保护，并测量实际变化。
+可复现的 C++ 与 Python 信息泄露实验项目：观察发布程序暴露的信息，实施限定范围的保护，并测量实际变化。
 
 **保护不意味着程序无法被逆向。** 本项目区分诊断保密、不透明 RTTI 名称、发布符号清理和代码混淆四种机制。
 
 ## 文档网站
 
-项目使用 MkDocs Material，提供可搜索的技术指南、实测结果和两个可独立下载的 skill。参见[中文文档首页](docs/index.zh-CN.md)和 [GitHub Pages 配置](docs/github-pages.zh-CN.md)。
+项目使用 MkDocs Material，提供可搜索的技术指南、实测结果和四个可独立下载的 skill。参见[中文文档首页](docs/index.zh-CN.md)和 [GitHub Pages 配置](docs/github-pages.zh-CN.md)。
 
 在线文档：<https://weixuep.github.io/ANTI-REA/index.zh-CN/>
 
@@ -30,6 +30,7 @@ python -m mkdocs serve
 - 五个策略常量的可选运行时掩码，并分别验证直接字节隐藏与可恢复性。
 - 可移植源码/二进制审计工具，以及独立的检测和保护 skill。
 - 可选的固定版本 REA 后端，基于原始 baseline 调查原生漏洞候选。
+- Windows Python 源码/pyc、PyInstaller、AES 加载、PyArmor 试用和 Nuitka 的[恢复与成本实测](docs/python-results.zh-CN.md)，以及[两个 Python skill](docs/python-protection.zh-CN.md)。
 
 示例是小型通用计算引擎，不是真实求解器。整数工作负载便于精确比较结果，数值热点不参与混淆，无需大型数值依赖。
 

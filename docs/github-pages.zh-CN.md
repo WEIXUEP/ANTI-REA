@@ -68,7 +68,7 @@ gh api repos/OWNER/REPOSITORY/pages --jq '.build_type'
 
 ## 公开范围
 
-网站包含 `docs/`、审阅过的测量摘要、两个生成的 skill 下载包及项目许可。
+网站包含 `docs/`、审阅过的测量摘要、四个生成的 skill 下载包及项目许可。
 site hook 按文件白名单发布，不遍历私有或构建目录。skill Markdown 直接从规范源生成网页，
 公开使用指南提供中英文版本，skill 入口及参考文档保持英文，下载包也保留英文版本。
 

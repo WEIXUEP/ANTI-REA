@@ -96,7 +96,7 @@ environment variable for a local production build when checking canonical URLs.
 
 ## Publication Boundaries
 
-The site includes `docs/`, reviewed measurement summaries and two generated skill
+The site includes `docs/`, reviewed measurement summaries and four generated skill
 downloads (read-only detection and protection guidance). The site hook explicitly allowlists each package's public files and
 includes their project license. It
 does not walk private or build directories. Canonical skill Markdown is rendered
